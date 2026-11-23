@@ -127,6 +127,8 @@ export const useEmployees = () => {
       subsidy?: number
       allowance?: number
       overtimePay?: number
+      earnedLeaves?: number
+      leaveDays?: number
       insurance?: number
       leaveDeduction?: number
     }

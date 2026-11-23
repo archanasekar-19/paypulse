@@ -16,6 +16,8 @@ export interface Employee {
   allowance?: number
   overtimePay?: number
   grossSalary?: number
+  earnedLeaves?: number
+  leaveDays?: number
   insurance?: number
   leaveDeduction?: number
   netSalary?: number
@@ -39,6 +41,8 @@ export interface CompensationUpdateData {
   subsidy?: number
   allowance?: number
   overtimePay?: number
+  earnedLeaves?: number
+  leaveDays?: number
   insurance?: number
   leaveDeduction?: number
 }

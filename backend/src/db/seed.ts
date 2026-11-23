@@ -110,9 +110,13 @@ export async function seed() {
       const overtimePay = hasOvertime ? Math.round((baseSalary * (Math.random() * 0.03)) / 100) * 100 : 0
       const grossSalary = baseSalary + bonus + subsidy + allowance + overtimePay
 
-      // Deductions of Wages (Subtractions)
+      // Deductions of Wages (Subtractions with Leave & Attendance Tracking)
       const insurance = Math.round((baseSalary * 0.065) / 100) * 100 // 6.5% statutory insurance
-      const leaveDeduction = Math.random() > 0.7 ? Math.round((baseSalary * (Math.random() * 0.015)) / 100) * 100 : 0
+      const earnedLeaves = 18 // Standard 18 days annual earned/paid leaves quota
+      const leaveDays = Math.floor(Math.random() * 22) // 0 to 21 leaves taken
+      const unpaidDays = Math.max(0, leaveDays - earnedLeaves)
+      const dailyWage = Math.round(baseSalary / 260)
+      const leaveDeduction = unpaidDays * dailyWage
 
       // Net Take-Home Salary
       const netSalary = grossSalary - (insurance + leaveDeduction)
@@ -138,6 +142,8 @@ export async function seed() {
         allowance,
         overtimePay,
         grossSalary,
+        earnedLeaves,
+        leaveDays,
         insurance,
         leaveDeduction,
         netSalary,

@@ -101,6 +101,8 @@ export const updateEmployeeAsync = createAsyncThunk(
         subsidy?: number
         allowance?: number
         overtimePay?: number
+        earnedLeaves?: number
+        leaveDays?: number
         insurance?: number
         leaveDeduction?: number
       }
@@ -245,6 +247,8 @@ export const employeeSlice = createSlice({
             allowance: updated.allowance,
             overtimePay: updated.overtimePay,
             grossSalary: updated.grossSalary,
+            earnedLeaves: updated.earnedLeaves,
+            leaveDays: updated.leaveDays,
             insurance: updated.insurance,
             leaveDeduction: updated.leaveDeduction,
             netSalary: updated.netSalary,

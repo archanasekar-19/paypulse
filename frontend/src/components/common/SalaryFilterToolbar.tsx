@@ -14,6 +14,7 @@ import {
   Button
 } from '@mui/material'
 import { Icon } from '@iconify/react'
+import { AppIcon } from '../../constants/icons'
 import { DEPARTMENTS, COUNTRIES } from '../../constants/filters'
 
 export interface SalaryFilterToolbarProps {
@@ -53,165 +54,221 @@ export const SalaryFilterToolbar: React.FC<SalaryFilterToolbarProps> = ({
     }
   }
 
-  // Consistent sizing for action buttons
+  // Consistent sizing for action buttons (Rounded square, no circle or oval)
   const buttonSx = {
-    height: 40,
-    minWidth: 105,
+    height: 38,
+    minWidth: 95,
     px: 2,
     fontWeight: 600,
+    borderRadius: '8px', // Rounded square button
     textTransform: 'none',
-    boxShadow: 'none'
+    boxShadow: 'none',
+    fontSize: '0.84rem'
   }
 
+  const allDepartmentsList = ['ALL', ...departments]
+
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 2.5,
-        mb: 3,
-        border: '1px solid #e2e8f0',
-        backgroundColor: '#ffffff',
-        display: 'flex',
-        flexDirection: { xs: 'column', lg: 'row' },
-        gap: 2,
-        alignItems: { xs: 'stretch', lg: 'center' },
-        justifyContent: 'space-between'
-      }}
-    >
-      {/* Ordered Filter Controls: Search Box -> Department -> Country -> Search Button -> Reset Button */}
-      <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', flex: 1, alignItems: 'center' }}>
-        {/* 1. Search Box */}
-        <TextField
-          size="small"
-          placeholder="Search name, email, or role..."
-          value={searchInput}
-          onChange={(e) => onSearchInputChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          sx={{ minWidth: { xs: '100%', sm: 260 }, flex: { sm: 1 } }}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Icon icon="solar:magnifer-linear" width="18" height="18" color="#64748b" />
-                </InputAdornment>
-              ),
-              endAdornment: searchInput ? (
-                <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => onSearchInputChange('')}>
-                    <Icon icon="solar:close-circle-linear" width="16" height="16" />
-                  </IconButton>
-                </InputAdornment>
-              ) : null
-            }
-          }}
-        />
+    <Box sx={{ mb: 3 }}>
+      {/* Category Filter Ribbon with Rounded Square Buttons */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          overflowX: 'auto',
+          pb: 1.5,
+          mb: 1,
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' }
+        }}
+      >
+        {allDepartmentsList.map((dept) => {
+          const isSelected = selectedDepartment === dept
+          const label = dept === 'ALL' ? 'All Departments' : dept
 
-        {/* 2. Department Dropdown */}
-        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160 } }}>
-          <InputLabel id="filter-dept-label">Department</InputLabel>
-          <Select
-            labelId="filter-dept-label"
-            value={selectedDepartment}
-            label="Department"
-            onChange={(e) => onDepartmentChange(e.target.value)}
-          >
-            <MenuItem value="ALL">All Departments</MenuItem>
-            {departments.map((dept) => (
-              <MenuItem key={dept} value={dept}>
-                {dept}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* 3. Country Dropdown */}
-        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
-          <InputLabel id="filter-country-label">Country</InputLabel>
-          <Select
-            labelId="filter-country-label"
-            value={selectedCountry}
-            label="Country"
-            onChange={(e) => onCountryChange(e.target.value)}
-          >
-            <MenuItem value="ALL">All Countries</MenuItem>
-            {countries.map((c) => (
-              <MenuItem key={c} value={c}>
-                {c}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* 4. Search Button */}
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={onSearch}
-          sx={buttonSx}
-          startIcon={<Icon icon="solar:magnifer-linear" width="18" height="18" />}
-        >
-          Search
-        </Button>
-
-        {/* 5. Reset Button (Exact same height and width as Search button) */}
-        <Button
-          variant="outlined"
-          color="inherit"
-          onClick={onResetFilters}
-          sx={{
-            ...buttonSx,
-            borderColor: '#cbd5e1',
-            color: '#475569',
-            backgroundColor: '#f8fafc',
-            '&:hover': {
-              borderColor: '#94a3b8',
-              backgroundColor: '#f1f5f9'
-            }
-          }}
-          startIcon={<Icon icon="solar:restart-linear" width="16" height="16" />}
-        >
-          Reset
-        </Button>
+          return (
+            <Button
+              key={dept}
+              onClick={() => onDepartmentChange(dept)}
+              size="small"
+              sx={{
+                px: 2,
+                py: 0.6,
+                minHeight: 32,
+                borderRadius: '8px', // Clean rounded square
+                fontSize: '0.8125rem',
+                fontWeight: isSelected ? 700 : 500,
+                whiteSpace: 'nowrap',
+                transition: 'all 0.15s ease',
+                backgroundColor: isSelected ? '#1e242e' : '#ffffff',
+                color: isSelected ? '#ffffff' : '#475569',
+                border: isSelected ? '1px solid #1e242e' : '1px solid #e2e8f0',
+                '&:hover': {
+                  backgroundColor: isSelected ? '#0f172a' : '#f1f5f9',
+                  borderColor: isSelected ? '#0f172a' : '#cbd5e1'
+                }
+              }}
+            >
+              {label}
+            </Button>
+          )
+        })}
       </Box>
 
-      {/* Right: Add Employee Action & Results Count */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: { xs: 'flex-start', lg: 'flex-end' } }}>
-        {onOpenAddEmployee && (
-          <Button
-            variant="contained"
-            color="success"
-            onClick={onOpenAddEmployee}
-            sx={{
-              height: 40,
-              px: 2,
-              fontWeight: 600,
-              textTransform: 'none',
-              boxShadow: 'none',
-              backgroundColor: '#16a34a',
-              '&:hover': { backgroundColor: '#15803d' }
-            }}
-            startIcon={<Icon icon="solar:user-plus-bold" width="18" height="18" />}
-          >
-            Add Employee
-          </Button>
-        )}
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-            Total:
-          </Typography>
-          <Chip
-            label={totalCount.toLocaleString()}
+      {/* Main Filter Action Bar */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 1.75,
+          borderRadius: '14px',
+          border: '1px solid #eef1f6',
+          backgroundColor: '#ffffff',
+          display: 'flex',
+          flexDirection: { xs: 'column', lg: 'row' },
+          gap: 1.5,
+          alignItems: { xs: 'stretch', lg: 'center' },
+          justifyContent: 'space-between'
+        }}
+      >
+        {/* Left Filter Controls: Search Box + Country Dropdown + Action Buttons */}
+        <Box sx={{ display: 'flex', gap: 1.25, flexWrap: 'wrap', flex: 1, alignItems: 'center' }}>
+          {/* 1. Search Box */}
+          <TextField
             size="small"
+            placeholder="Search employee, title, or email..."
+            value={searchInput}
+            onChange={(e) => onSearchInputChange(e.target.value)}
+            onKeyDown={handleKeyDown}
             sx={{
-              fontWeight: 700,
-              backgroundColor: '#f1f5f9',
-              color: '#0f172a',
-              fontSize: '0.75rem'
+              minWidth: { xs: '100%', sm: 270 },
+              flex: { sm: 1 },
+              '& .MuiOutlinedInput-root': {
+                height: 38,
+                borderRadius: '10px',
+                backgroundColor: '#f8fafc',
+                fontSize: '0.84rem'
+              }
+            }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Icon icon={AppIcon.SEARCH} width="18" height="18" color="#64748b" />
+                  </InputAdornment>
+                ),
+                endAdornment: searchInput ? (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => onSearchInputChange('')}>
+                      <Icon icon={AppIcon.CLOSE} width="16" height="16" />
+                    </IconButton>
+                  </InputAdornment>
+                ) : null
+              }
             }}
           />
+
+          {/* 2. Country Dropdown */}
+          <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160 } }}>
+            <InputLabel id="filter-country-label" sx={{ fontSize: '0.825rem' }}>
+              Country
+            </InputLabel>
+            <Select
+              labelId="filter-country-label"
+              value={selectedCountry}
+              label="Country"
+              onChange={(e) => onCountryChange(e.target.value)}
+              sx={{
+                height: 38,
+                borderRadius: '10px',
+                backgroundColor: '#f8fafc',
+                fontSize: '0.84rem'
+              }}
+            >
+              <MenuItem value="ALL" sx={{ fontSize: '0.84rem' }}>
+                All Countries
+              </MenuItem>
+              {countries.map((c) => (
+                <MenuItem key={c} value={c} sx={{ fontSize: '0.84rem' }}>
+                  {c}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* 3. Search Button */}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={onSearch}
+            sx={{
+              ...buttonSx,
+              backgroundColor: '#2563eb',
+              '&:hover': { backgroundColor: '#1d4ed8' }
+            }}
+            startIcon={<Icon icon={AppIcon.SEARCH} width="16" height="16" />}
+          >
+            Search
+          </Button>
+
+          {/* 4. Reset Button */}
+          <Button
+            variant="outlined"
+            color="inherit"
+            onClick={onResetFilters}
+            sx={{
+              ...buttonSx,
+              borderColor: '#e2e8f0',
+              color: '#475569',
+              backgroundColor: '#ffffff',
+              '&:hover': {
+                borderColor: '#cbd5e1',
+                backgroundColor: '#f8fafc'
+              }
+            }}
+            startIcon={<Icon icon={AppIcon.RESET} width="15" height="15" />}
+          >
+            Reset
+          </Button>
         </Box>
-      </Box>
-    </Paper>
+
+        {/* Right: Add Employee Action & Results Count */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, justifyContent: { xs: 'flex-start', lg: 'flex-end' } }}>
+          {onOpenAddEmployee && (
+            <Button
+              variant="contained"
+              onClick={onOpenAddEmployee}
+              sx={{
+                ...buttonSx,
+                backgroundColor: '#ff5442', // iLovePDF Signature Coral/Red Accent
+                color: '#ffffff',
+                '&:hover': { backgroundColor: '#e03a29' }
+              }}
+              startIcon={<Icon icon={AppIcon.ADD_USER} width="16" height="16" />}
+            >
+              Add Employee
+            </Button>
+          )}
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, fontSize: '0.75rem' }}>
+              Records:
+            </Typography>
+            <Chip
+              label={totalCount.toLocaleString()}
+              size="small"
+              sx={{
+                fontWeight: 700,
+                backgroundColor: '#f1f5f9',
+                color: '#1e242e',
+                fontSize: '0.75rem',
+                height: 24,
+                borderRadius: '6px'
+              }}
+            />
+          </Box>
+        </Box>
+      </Paper>
+    </Box>
   )
 }

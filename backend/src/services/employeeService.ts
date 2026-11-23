@@ -23,6 +23,8 @@ export interface CreateEmployeeInput {
   subsidy?: number
   allowance?: number
   overtimePay?: number
+  earnedLeaves?: number
+  leaveDays?: number
   insurance?: number
   leaveDeduction?: number
 }
@@ -39,6 +41,8 @@ export interface UpdateEmployeeInput {
   subsidy?: number
   allowance?: number
   overtimePay?: number
+  earnedLeaves?: number
+  leaveDays?: number
   insurance?: number
   leaveDeduction?: number
 }
@@ -138,6 +142,8 @@ export class EmployeeService {
       allowance: emp.allowance,
       overtimePay: emp.overtimePay,
       grossSalary: emp.grossSalary,
+      earnedLeaves: emp.earnedLeaves,
+      leaveDays: emp.leaveDays,
       insurance: emp.insurance,
       leaveDeduction: emp.leaveDeduction,
       netSalary: emp.netSalary,
@@ -180,7 +186,11 @@ export class EmployeeService {
 
     // Deductions of Wages
     const insurance = input.insurance ?? Math.round(input.baseSalary * 0.065)
-    const leaveDeduction = input.leaveDeduction ?? 0
+    const earnedLeaves = input.earnedLeaves ?? 18
+    const leaveDays = input.leaveDays ?? 0
+    const unpaidDays = Math.max(0, leaveDays - earnedLeaves)
+    const dailyWage = input.baseSalary / 260
+    const leaveDeduction = input.leaveDeduction !== undefined ? input.leaveDeduction : Math.round(unpaidDays * dailyWage)
 
     // Net Salary
     const netSalary = grossSalary - (insurance + leaveDeduction)
@@ -203,6 +213,8 @@ export class EmployeeService {
         allowance,
         overtimePay,
         grossSalary,
+        earnedLeaves,
+        leaveDays,
         insurance,
         leaveDeduction,
         netSalary,
@@ -234,7 +246,11 @@ export class EmployeeService {
     const grossSalary = baseSalary + bonus + subsidy + allowance + overtimePay
 
     const insurance = input.insurance !== undefined ? input.insurance : employee.insurance
-    const leaveDeduction = input.leaveDeduction !== undefined ? input.leaveDeduction : employee.leaveDeduction
+    const earnedLeaves = input.earnedLeaves !== undefined ? input.earnedLeaves : employee.earnedLeaves
+    const leaveDays = input.leaveDays !== undefined ? input.leaveDays : employee.leaveDays
+    const unpaidDays = Math.max(0, leaveDays - earnedLeaves)
+    const dailyWage = baseSalary / 260
+    const leaveDeduction = input.leaveDeduction !== undefined ? input.leaveDeduction : Math.round(unpaidDays * dailyWage)
 
     const netSalary = grossSalary - (insurance + leaveDeduction)
     const netSalaryUSD = Math.round(netSalary * fxRate)
@@ -256,6 +272,8 @@ export class EmployeeService {
         allowance,
         overtimePay,
         grossSalary,
+        earnedLeaves,
+        leaveDays,
         insurance,
         leaveDeduction,
         netSalary,

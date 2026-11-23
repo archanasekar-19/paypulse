@@ -99,14 +99,14 @@ export default function App() {
         <Navbar />
 
         {/* Main Workspace */}
-        <Box sx={{ flex: 1, py: 3.5, px: { xs: 2, sm: 4, md: 5 } }}>
-          {/* Page Title */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h5" sx={{ fontWeight: 800 }} gutterBottom>
-              Global Compensation Overview
+        <Box sx={{ flex: 1, py: 2.75, px: { xs: 2, sm: 3.5, md: 4.5 }, maxWidth: 1440, mx: 'auto', width: '100%' }}>
+          {/* iLovePDF Clean Symmetrical Hero Header */}
+          <Box sx={{ mb: 2.5, textAlign: { xs: 'left', sm: 'center' }, maxWidth: 860, mx: 'auto' }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: '#1e242e', letterSpacing: '-0.025em', mb: 0.5, fontSize: { xs: '1.5rem', sm: '1.85rem' } }}>
+              Global Compensation & Payroll Hub
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Real-time payroll analytics, distribution benchmarks, and employee salary roster across 7 operating countries
+            <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
+              Real-time payroll analytics, attendance & leave mechanics, and employee welfare management across 7 operating countries
             </Typography>
           </Box>
 

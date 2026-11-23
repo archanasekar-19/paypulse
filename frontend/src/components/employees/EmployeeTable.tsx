@@ -18,6 +18,7 @@ import {
   CircularProgress
 } from '@mui/material'
 import { Icon } from '@iconify/react'
+import { AppIcon } from '../../constants/icons'
 import type { Employee } from '../../types'
 import { formatCurrency, getInitials } from '../../utils/formatters'
 import { getDepartmentStyle } from '../../constants/departments'
@@ -54,12 +55,13 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
   onDeleteEmployee
 }) => {
   return (
-    <Paper elevation={0} sx={{ overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+    <Paper elevation={0} sx={{ overflow: 'hidden', border: '1px solid #eef1f6', borderRadius: '14px' }}>
       {/* Table Header Section */}
       <Box
         sx={{
-          p: 2.5,
-          borderBottom: '1px solid #e2e8f0',
+          py: 1.5,
+          px: 2.25,
+          borderBottom: '1px solid #eef1f6',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -67,10 +69,10 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
         }}
       >
         <Box>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#1e242e', fontSize: '1rem', lineHeight: 1.2 }}>
             Employee Salary Roster
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.75rem' }}>
             Live compensation records from backend database (10,000 employees)
           </Typography>
         </Box>
@@ -188,6 +190,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                           sx={{
                             width: 36,
                             height: 36,
+                            borderRadius: '8px',
                             fontSize: '0.8125rem',
                             fontWeight: 700,
                             backgroundColor: '#f1f5f9',
@@ -214,14 +217,15 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                         component="span"
                         sx={{
                           display: 'inline-block',
-                          px: 1.2,
-                          py: 0.4,
-                          borderRadius: 1,
+                          px: 1.25,
+                          py: 0.35,
+                          borderRadius: '6px', // Clean rounded square badge
                           fontSize: '0.75rem',
                           fontWeight: 600,
                           backgroundColor: deptStyle.bg,
                           color: deptStyle.color,
-                          border: `1px solid ${deptStyle.border}`
+                          border: `1px solid ${deptStyle.border}`,
+                          lineHeight: 1.2
                         }}
                       >
                         {emp.department}
@@ -262,21 +266,24 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                       )}
                     </TableCell>
 
-                    {/* Actions: View Pay Slip, Edit, Delete */}
+                    {/* Actions: View Pay Slip, Edit, Delete (iLovePDF Soft Rounded Square Buttons) */}
                     <TableCell align="center">
-                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                      <Box sx={{ display: 'flex', gap: 0.75, justifyContent: 'center' }}>
                         {onViewPaySlip && (
                           <Tooltip title="View Compensation Slip & Welfare Breakdown">
                             <IconButton
                               size="small"
                               onClick={() => onViewPaySlip(emp)}
                               sx={{
-                                backgroundColor: '#f0fdf4',
-                                color: '#16a34a',
-                                '&:hover': { backgroundColor: '#dcfce7' }
+                                width: 30,
+                                height: 30,
+                                borderRadius: '8px',
+                                backgroundColor: '#e8f8f0',
+                                color: '#10b981',
+                                '&:hover': { backgroundColor: '#d1fae5' }
                               }}
                             >
-                              <Icon icon="solar:bill-list-linear" width="16" height="16" />
+                              <Icon icon={AppIcon.PAYSLIP} width="16" height="16" />
                             </IconButton>
                           </Tooltip>
                         )}
@@ -284,29 +291,34 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                         <Tooltip title="Edit Record">
                           <IconButton
                             size="small"
-                            color="primary"
                             onClick={() => onEditEmployee(emp)}
                             sx={{
+                              width: 30,
+                              height: 30,
+                              borderRadius: '8px',
                               backgroundColor: '#eff6ff',
+                              color: '#2563eb',
                               '&:hover': { backgroundColor: '#dbeafe' }
                             }}
                           >
-                            <Icon icon="solar:pen-linear" width="16" height="16" />
+                            <Icon icon={AppIcon.EDIT} width="16" height="16" />
                           </IconButton>
                         </Tooltip>
 
                         <Tooltip title="Remove Employee">
                           <IconButton
                             size="small"
-                            color="error"
                             onClick={() => onDeleteEmployee(emp)}
                             sx={{
-                              backgroundColor: '#fee2e2',
-                              color: '#dc2626',
-                              '&:hover': { backgroundColor: '#fecaca' }
+                              width: 30,
+                              height: 30,
+                              borderRadius: '8px',
+                              backgroundColor: '#fff0ee',
+                              color: '#ff5442',
+                              '&:hover': { backgroundColor: '#fee2e2' }
                             }}
                           >
-                            <Icon icon="solar:trash-bin-trash-linear" width="16" height="16" />
+                            <Icon icon={AppIcon.DELETE} width="15" height="15" />
                           </IconButton>
                         </Tooltip>
                       </Box>

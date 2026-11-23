@@ -9,10 +9,12 @@ body {
   padding: 0;
   width: 100%;
   min-height: 100vh;
-  background-color: #f8fafc;
+  background-color: #f8f9fb;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: #1e242e;
 }
 
 #root {

@@ -27,6 +27,10 @@ model Employee {
   overtimePay   Float    @default(0)
   grossSalary   Float    @default(0) // baseSalary + bonus + subsidy + allowance + overtimePay
 
+  // Attendance & Leave Tracking (For calculating unpaid leave deductions)
+  earnedLeaves   Float    @default(18) // Annual earned / paid leaves quota
+  leaveDays      Float    @default(0)  // Total leaves taken
+
   // Deductions of Wages (Subtractions)
   insurance      Float    @default(0)
   leaveDeduction Float    @default(0)

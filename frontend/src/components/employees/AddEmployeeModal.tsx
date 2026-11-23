@@ -16,6 +16,7 @@ import {
   CircularProgress
 } from '@mui/material'
 import { Icon } from '@iconify/react'
+import { AppIcon } from '../../constants/icons'
 import { DEPARTMENTS, COUNTRIES } from '../../constants/filters'
 import type { Employee } from '../../types'
 
@@ -143,7 +144,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pb: 1 }}>
         <Icon
-          icon={isEditMode ? 'solar:pen-new-square-linear' : 'solar:user-plus-bold-duotone'}
+          icon={isEditMode ? AppIcon.EDIT : AppIcon.ADD_USER_DUOTONE}
           width="24"
           height="24"
           color="#2563eb"
@@ -292,7 +293,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               <CircularProgress size={16} color="inherit" />
             ) : (
               <Icon
-                icon={isEditMode ? 'solar:check-circle-bold' : 'solar:user-plus-bold'}
+                icon={isEditMode ? AppIcon.CHECK : AppIcon.ADD_USER}
                 width="18"
                 height="18"
               />

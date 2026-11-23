@@ -10,6 +10,7 @@ import {
   CircularProgress
 } from '@mui/material'
 import { Icon } from '@iconify/react'
+import { AppIcon } from '../../constants/icons'
 import type { Employee } from '../../types'
 
 interface DeleteConfirmDialogProps {
@@ -55,7 +56,7 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
             justifyContent: 'center'
           }}
         >
-          <Icon icon="solar:danger-triangle-bold" width="22" height="22" />
+          <Icon icon={AppIcon.DANGER} width="22" height="22" />
         </Box>
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
           Confirm Deletion
@@ -84,7 +85,7 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
             isDeleting ? (
               <CircularProgress size={16} color="inherit" />
             ) : (
-              <Icon icon="solar:trash-bin-trash-linear" width="18" height="18" />
+              <Icon icon={AppIcon.DELETE_OUTLINE} width="18" height="18" />
             )
           }
         >

@@ -43,6 +43,8 @@ export class EmployeeController {
         subsidy,
         allowance,
         overtimePay,
+        earnedLeaves,
+        leaveDays,
         insurance,
         leaveDeduction
       } = req.body
@@ -67,6 +69,8 @@ export class EmployeeController {
         subsidy,
         allowance,
         overtimePay,
+        earnedLeaves,
+        leaveDays,
         insurance,
         leaveDeduction
       })
@@ -102,6 +106,8 @@ export class EmployeeController {
         subsidy,
         allowance,
         overtimePay,
+        earnedLeaves,
+        leaveDays,
         insurance,
         leaveDeduction
       } = req.body
@@ -122,6 +128,8 @@ export class EmployeeController {
         subsidy,
         allowance,
         overtimePay,
+        earnedLeaves,
+        leaveDays,
         insurance,
         leaveDeduction
       })
