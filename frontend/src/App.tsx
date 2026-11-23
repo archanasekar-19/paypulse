@@ -7,6 +7,7 @@ import { SalaryFilterToolbar } from './components/common/SalaryFilterToolbar'
 import { EmployeeTable } from './components/employees/EmployeeTable'
 import { AddEmployeeModal } from './components/employees/AddEmployeeModal'
 import { DeleteConfirmDialog } from './components/employees/DeleteConfirmDialog'
+import { PaySlipModal } from './components/employees/PaySlipModal'
 import { useEmployees } from './hooks/useEmployees'
 import { useAnalytics } from './hooks/useAnalytics'
 import type { Employee, EmployeeFormData } from './types'
@@ -44,6 +45,7 @@ export default function App() {
   // Modal & Dialog state
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
   const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null)
+  const [viewingPaySlipEmployee, setViewingPaySlipEmployee] = useState<Employee | null>(null)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [notification, setNotification] = useState<{ message: string; severity: 'success' | 'error' } | null>(null)
 
@@ -146,6 +148,7 @@ export default function App() {
             onPageChange={setPage}
             onPageSizeChange={setPageSize}
             onSortChange={handleSortChange}
+            onViewPaySlip={(emp) => setViewingPaySlipEmployee(emp)}
             onEditEmployee={(emp) => setEditingEmployee(emp)}
             onDeleteEmployee={(emp) => setDeletingEmployee(emp)}
           />
@@ -156,6 +159,13 @@ export default function App() {
             employee={editingEmployee}
             onClose={handleCloseEmployeeModal}
             onSubmit={handleSaveEmployee}
+          />
+
+          {/* Employee Compensation Slip & Welfare Breakdown Modal */}
+          <PaySlipModal
+            open={Boolean(viewingPaySlipEmployee)}
+            employee={viewingPaySlipEmployee}
+            onClose={() => setViewingPaySlipEmployee(null)}
           />
 
           {/* Delete Confirmation Popup Dialog (Delete) */}

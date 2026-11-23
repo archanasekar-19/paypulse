@@ -31,7 +31,21 @@ export class EmployeeController {
    */
   async createEmployee(req: Request, res: Response) {
     try {
-      const { firstName, lastName, email, department, country, jobTitle, baseSalary } = req.body
+      const {
+        firstName,
+        lastName,
+        email,
+        department,
+        country,
+        jobTitle,
+        baseSalary,
+        bonus,
+        subsidy,
+        allowance,
+        overtimePay,
+        insurance,
+        leaveDeduction
+      } = req.body
 
       if (!firstName || !lastName || !email || !department || !country || !jobTitle || !baseSalary) {
         return res.status(400).json({ error: 'All fields are required' })
@@ -48,7 +62,13 @@ export class EmployeeController {
         department,
         country,
         jobTitle,
-        baseSalary
+        baseSalary,
+        bonus,
+        subsidy,
+        allowance,
+        overtimePay,
+        insurance,
+        leaveDeduction
       })
 
       return res.status(201).json({
@@ -70,7 +90,21 @@ export class EmployeeController {
   async updateEmployee(req: Request, res: Response) {
     try {
       const id = Array.isArray(req.params.id) ? req.params.id[0]! : (req.params.id as string)
-      const { firstName, lastName, email, department, country, jobTitle, baseSalary } = req.body
+      const {
+        firstName,
+        lastName,
+        email,
+        department,
+        country,
+        jobTitle,
+        baseSalary,
+        bonus,
+        subsidy,
+        allowance,
+        overtimePay,
+        insurance,
+        leaveDeduction
+      } = req.body
 
       if (baseSalary !== undefined && (typeof baseSalary !== 'number' || baseSalary <= 0)) {
         return res.status(400).json({ error: 'Salary must be a positive number' })
@@ -83,7 +117,13 @@ export class EmployeeController {
         department,
         country,
         jobTitle,
-        baseSalary
+        baseSalary,
+        bonus,
+        subsidy,
+        allowance,
+        overtimePay,
+        insurance,
+        leaveDeduction
       })
 
       return res.status(200).json({

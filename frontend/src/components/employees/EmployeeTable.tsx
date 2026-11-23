@@ -33,6 +33,7 @@ interface EmployeeTableProps {
   onPageChange: (newPage: number) => void
   onPageSizeChange: (newPageSize: number) => void
   onSortChange: (column: 'salary' | 'name' | 'department' | 'country' | 'hireDate') => void
+  onViewPaySlip?: (employee: Employee) => void
   onEditEmployee: (employee: Employee) => void
   onDeleteEmployee: (employee: Employee) => void
 }
@@ -48,6 +49,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
   onPageChange,
   onPageSizeChange,
   onSortChange,
+  onViewPaySlip,
   onEditEmployee,
   onDeleteEmployee
 }) => {
@@ -147,7 +149,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
               {/* Job Title */}
               <TableCell>Job Title</TableCell>
 
-              {/* Base Salary */}
+              {/* Base Salary Column */}
               <TableCell align="right">
                 <TableSortLabel
                   active={sortBy === 'salary'}
@@ -159,7 +161,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
               </TableCell>
 
               {/* Actions Column */}
-              <TableCell align="center" sx={{ width: 100 }}>
+              <TableCell align="center" sx={{ width: 135 }}>
                 Actions
               </TableCell>
             </TableRow>
@@ -240,17 +242,46 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                       </Typography>
                     </TableCell>
 
-                    {/* Salary */}
+                    {/* Salary: Base Salary as primary, Take-Home below */}
                     <TableCell align="right">
                       <Typography variant="subtitle2" sx={{ fontWeight: 700 }} color="text.primary">
-                        {formatCurrency(emp.salary, emp.currency)}
+                        {formatCurrency(emp.baseSalary || emp.salary, emp.currency)}
                       </Typography>
+                      {Boolean(emp.netSalary) && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            display: 'block',
+                            fontSize: '0.72rem',
+                            fontWeight: 600,
+                            color: '#16a34a'
+                          }}
+                        >
+                          Take-Home: {formatCurrency(emp.netSalary!, emp.currency)}
+                        </Typography>
+                      )}
                     </TableCell>
 
-                    {/* Actions: Edit & Delete */}
+                    {/* Actions: View Pay Slip, Edit, Delete */}
                     <TableCell align="center">
                       <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
-                        <Tooltip title="Update Salary">
+                        {onViewPaySlip && (
+                          <Tooltip title="View Compensation Slip & Welfare Breakdown">
+                            <IconButton
+                              size="small"
+                              onClick={() => onViewPaySlip(emp)}
+                              sx={{
+                                backgroundColor: '#f0fdf4',
+                                color: '#16a34a',
+                                '&:hover': { backgroundColor: '#dcfce7' }
+                              }}
+                            >
+                              <Icon icon="solar:bill-list-linear" width="16" height="16" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+
+                        <Tooltip title="Edit Record">
                           <IconButton
                             size="small"
                             color="primary"

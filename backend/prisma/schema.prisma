@@ -19,6 +19,22 @@ model Employee {
   baseSalary    Float
   currency      String
   baseSalaryUSD Float    // Pre-computed normalized USD for fast sorting and aggregations
+
+  // Welfare & Allowances (Additions to Base Pay from Spreadsheet Model)
+  bonus         Float    @default(0)
+  subsidy       Float    @default(0)
+  allowance     Float    @default(0)
+  overtimePay   Float    @default(0)
+  grossSalary   Float    @default(0) // baseSalary + bonus + subsidy + allowance + overtimePay
+
+  // Deductions of Wages (Subtractions)
+  insurance      Float    @default(0)
+  leaveDeduction Float    @default(0)
+
+  // Net Take-Home Salary
+  netSalary     Float    @default(0) // grossSalary - (insurance + leaveDeduction)
+  netSalaryUSD  Float    @default(0) // Pre-computed normalized USD net salary
+
   hireDate      DateTime @default(now())
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -27,6 +43,7 @@ model Employee {
   @@index([department])
   @@index([country])
   @@index([baseSalaryUSD])
+  @@index([netSalaryUSD])
   @@index([department, country])
   @@index([lastName, firstName])
   @@map("employees")

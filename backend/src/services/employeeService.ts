@@ -7,7 +7,7 @@ export interface GetEmployeesParams {
   search?: string
   department?: string
   country?: string
-  sortBy?: 'salary' | 'name' | 'department' | 'country' | 'hireDate'
+  sortBy?: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'netSalary'
   sortOrder?: 'asc' | 'desc'
 }
 
@@ -19,6 +19,12 @@ export interface CreateEmployeeInput {
   country: string
   jobTitle: string
   baseSalary: number
+  bonus?: number
+  subsidy?: number
+  allowance?: number
+  overtimePay?: number
+  insurance?: number
+  leaveDeduction?: number
 }
 
 export interface UpdateEmployeeInput {
@@ -29,6 +35,12 @@ export interface UpdateEmployeeInput {
   country?: string
   jobTitle?: string
   baseSalary?: number
+  bonus?: number
+  subsidy?: number
+  allowance?: number
+  overtimePay?: number
+  insurance?: number
+  leaveDeduction?: number
 }
 
 // Exchange rates normalized to base USD
@@ -93,6 +105,8 @@ export class EmployeeService {
       orderBy = { country: sortOrder }
     } else if (sortBy === 'hireDate') {
       orderBy = { hireDate: sortOrder }
+    } else if (sortBy === 'netSalary') {
+      orderBy = { netSalaryUSD: sortOrder }
     }
 
     const [totalRecords, employees] = await Promise.all([
@@ -118,6 +132,16 @@ export class EmployeeService {
       country: emp.country,
       jobTitle: emp.jobTitle,
       salary: emp.baseSalary,
+      baseSalary: emp.baseSalary,
+      bonus: emp.bonus,
+      subsidy: emp.subsidy,
+      allowance: emp.allowance,
+      overtimePay: emp.overtimePay,
+      grossSalary: emp.grossSalary,
+      insurance: emp.insurance,
+      leaveDeduction: emp.leaveDeduction,
+      netSalary: emp.netSalary,
+      netSalaryUSD: emp.netSalaryUSD,
       currency: emp.currency,
       baseSalaryUSD: emp.baseSalaryUSD,
       hireDate: emp.hireDate.toISOString()
@@ -137,7 +161,7 @@ export class EmployeeService {
   }
 
   /**
-   * Creates a new employee record and computes normalized baseSalaryUSD
+   * Creates a new employee record and computes normalized baseSalaryUSD, grossSalary, and netSalary
    */
   async createEmployee(input: CreateEmployeeInput) {
     const totalCount = await prisma.employee.count()
@@ -146,6 +170,21 @@ export class EmployeeService {
     const currency = COUNTRY_CURRENCY_MAP[input.country] || 'USD'
     const fxRate = FX_RATES_TO_USD[currency] || 1.0
     const baseSalaryUSD = Math.round(input.baseSalary * fxRate)
+
+    // Welfare Salary Calculations
+    const bonus = input.bonus ?? Math.round(input.baseSalary * 0.08)
+    const subsidy = input.subsidy ?? Math.round(input.baseSalary * 0.03)
+    const allowance = input.allowance ?? Math.round(input.baseSalary * 0.04)
+    const overtimePay = input.overtimePay ?? 0
+    const grossSalary = input.baseSalary + bonus + subsidy + allowance + overtimePay
+
+    // Deductions of Wages
+    const insurance = input.insurance ?? Math.round(input.baseSalary * 0.065)
+    const leaveDeduction = input.leaveDeduction ?? 0
+
+    // Net Salary
+    const netSalary = grossSalary - (insurance + leaveDeduction)
+    const netSalaryUSD = Math.round(netSalary * fxRate)
 
     return prisma.employee.create({
       data: {
@@ -159,13 +198,22 @@ export class EmployeeService {
         baseSalary: input.baseSalary,
         currency,
         baseSalaryUSD,
+        bonus,
+        subsidy,
+        allowance,
+        overtimePay,
+        grossSalary,
+        insurance,
+        leaveDeduction,
+        netSalary,
+        netSalaryUSD,
         hireDate: new Date()
       }
     })
   }
 
   /**
-   * Updates full employee details and recalculates USD compensation
+   * Updates full employee details and recalculates USD compensation, gross, and net salary
    */
   async updateEmployee(id: string, input: UpdateEmployeeInput) {
     const employee = await prisma.employee.findUnique({ where: { id } })
@@ -179,6 +227,18 @@ export class EmployeeService {
     const baseSalary = input.baseSalary ?? employee.baseSalary
     const baseSalaryUSD = Math.round(baseSalary * fxRate)
 
+    const bonus = input.bonus !== undefined ? input.bonus : employee.bonus
+    const subsidy = input.subsidy !== undefined ? input.subsidy : employee.subsidy
+    const allowance = input.allowance !== undefined ? input.allowance : employee.allowance
+    const overtimePay = input.overtimePay !== undefined ? input.overtimePay : employee.overtimePay
+    const grossSalary = baseSalary + bonus + subsidy + allowance + overtimePay
+
+    const insurance = input.insurance !== undefined ? input.insurance : employee.insurance
+    const leaveDeduction = input.leaveDeduction !== undefined ? input.leaveDeduction : employee.leaveDeduction
+
+    const netSalary = grossSalary - (insurance + leaveDeduction)
+    const netSalaryUSD = Math.round(netSalary * fxRate)
+
     return prisma.employee.update({
       where: { id },
       data: {
@@ -190,13 +250,22 @@ export class EmployeeService {
         jobTitle: input.jobTitle !== undefined ? input.jobTitle.trim() : undefined,
         baseSalary,
         currency,
-        baseSalaryUSD
+        baseSalaryUSD,
+        bonus,
+        subsidy,
+        allowance,
+        overtimePay,
+        grossSalary,
+        insurance,
+        leaveDeduction,
+        netSalary,
+        netSalaryUSD
       }
     })
   }
 
   /**
-   * Updates an employee's salary and recalculates normalized USD amount
+   * Updates an employee's salary and recalculates normalized USD amount, gross, and net salary
    */
   async updateSalary(id: string, newSalary: number) {
     const employee = await prisma.employee.findUnique({ where: { id } })
@@ -205,13 +274,21 @@ export class EmployeeService {
     }
 
     const fxRate = FX_RATES_TO_USD[employee.currency] || 1.0
-    const baseSalaryUSD = Math.round(newSalary * fxRate)
+    const baseSalary = newSalary
+    const baseSalaryUSD = Math.round(baseSalary * fxRate)
+
+    const grossSalary = baseSalary + employee.bonus + employee.subsidy + employee.allowance + employee.overtimePay
+    const netSalary = grossSalary - (employee.insurance + employee.leaveDeduction)
+    const netSalaryUSD = Math.round(netSalary * fxRate)
 
     return prisma.employee.update({
       where: { id },
       data: {
-        baseSalary: newSalary,
-        baseSalaryUSD
+        baseSalary,
+        baseSalaryUSD,
+        grossSalary,
+        netSalary,
+        netSalaryUSD
       }
     })
   }

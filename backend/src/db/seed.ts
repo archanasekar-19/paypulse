@@ -102,6 +102,22 @@ export async function seed() {
       const fxRate = FX_RATES_TO_USD[country.currency] || 1.0
       const baseSalaryUSD = Math.round(baseSalary * fxRate)
 
+      // Welfare Salary Components (Additions)
+      const bonus = Math.round((baseSalary * (0.05 + Math.random() * 0.1)) / 100) * 100 // 5-15% performance bonus
+      const subsidy = Math.round((baseSalary * 0.03) / 100) * 100 // 3% commute/meal subsidy
+      const allowance = Math.round((baseSalary * 0.04) / 100) * 100 // 4% role allowance
+      const hasOvertime = dept.name === 'Operations' || dept.name === 'Engineering'
+      const overtimePay = hasOvertime ? Math.round((baseSalary * (Math.random() * 0.03)) / 100) * 100 : 0
+      const grossSalary = baseSalary + bonus + subsidy + allowance + overtimePay
+
+      // Deductions of Wages (Subtractions)
+      const insurance = Math.round((baseSalary * 0.065) / 100) * 100 // 6.5% statutory insurance
+      const leaveDeduction = Math.random() > 0.7 ? Math.round((baseSalary * (Math.random() * 0.015)) / 100) * 100 : 0
+
+      // Net Take-Home Salary
+      const netSalary = grossSalary - (insurance + leaveDeduction)
+      const netSalaryUSD = Math.round(netSalary * fxRate)
+
       // Random hire date within last 6 years
       const daysAgo = Math.floor(Math.random() * (6 * 365))
       const hireDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000)
@@ -117,6 +133,15 @@ export async function seed() {
         baseSalary,
         currency: country.currency,
         baseSalaryUSD,
+        bonus,
+        subsidy,
+        allowance,
+        overtimePay,
+        grossSalary,
+        insurance,
+        leaveDeduction,
+        netSalary,
+        netSalaryUSD,
         hireDate
       })
     }

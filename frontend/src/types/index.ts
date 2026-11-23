@@ -10,6 +10,16 @@ export interface Employee {
   country: string
   jobTitle: string
   salary: number
+  baseSalary?: number
+  bonus?: number
+  subsidy?: number
+  allowance?: number
+  overtimePay?: number
+  grossSalary?: number
+  insurance?: number
+  leaveDeduction?: number
+  netSalary?: number
+  netSalaryUSD?: number
   currency: CurrencyCode
 }
 

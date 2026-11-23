@@ -71,22 +71,41 @@ describe('EmployeeService & Server-Side Filtering (10,000 Employees)', () => {
     expect(created.employeeCode).toBeDefined()
     expect(created.currency).toBe('GBP')
     expect(created.baseSalaryUSD).toBe(Math.round(120000 * 1.28))
+    expect(created.grossSalary).toBeGreaterThan(120000)
+    expect(created.netSalary).toBe(created.grossSalary - (created.insurance + created.leaveDeduction))
+    expect(created.netSalaryUSD).toBe(Math.round(created.netSalary * 1.28))
 
     // 2. Update Salary
     const updatedSalary = await employeeService.updateSalary(created.id, 135000)
     expect(updatedSalary.baseSalary).toBe(135000)
     expect(updatedSalary.baseSalaryUSD).toBe(Math.round(135000 * 1.28))
+    expect(updatedSalary.grossSalary).toBeGreaterThan(135000)
+    expect(updatedSalary.netSalary).toBe(updatedSalary.grossSalary - (updatedSalary.insurance + updatedSalary.leaveDeduction))
 
-    // 3. Full Update Employee
+    // 3. Full Update Employee with Custom Welfare & Deductions
     const updatedRecord = await employeeService.updateEmployee(created.id, {
       jobTitle: 'Chief Cryptanalyst',
       baseSalary: 150000,
-      department: 'Operations'
+      department: 'Operations',
+      bonus: 15000,
+      subsidy: 4500,
+      allowance: 6000,
+      overtimePay: 2000,
+      insurance: 9750,
+      leaveDeduction: 500
     })
     expect(updatedRecord.jobTitle).toBe('Chief Cryptanalyst')
     expect(updatedRecord.department).toBe('Operations')
     expect(updatedRecord.baseSalary).toBe(150000)
-    expect(updatedRecord.baseSalaryUSD).toBe(Math.round(150000 * 1.28))
+    expect(updatedRecord.bonus).toBe(15000)
+    expect(updatedRecord.subsidy).toBe(4500)
+    expect(updatedRecord.allowance).toBe(6000)
+    expect(updatedRecord.overtimePay).toBe(2000)
+    expect(updatedRecord.grossSalary).toBe(150000 + 15000 + 4500 + 6000 + 2000) // 177500
+    expect(updatedRecord.insurance).toBe(9750)
+    expect(updatedRecord.leaveDeduction).toBe(500)
+    expect(updatedRecord.netSalary).toBe(177500 - (9750 + 500)) // 167250
+    expect(updatedRecord.netSalaryUSD).toBe(Math.round(167250 * 1.28))
 
     // 4. Delete
     await employeeService.deleteEmployee(created.id)
