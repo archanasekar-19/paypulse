@@ -4,6 +4,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import employeeRoutes from './routes/employeeRoutes'
 import analyticsRoutes from './routes/analyticsRoutes'
+import authRoutes from './routes/authRoutes'
 
 dotenv.config()
 
@@ -20,6 +21,7 @@ app.get('/api/health', (req: Request, res: Response) => {
 })
 
 // Mount application REST API routes
+app.use('/api/auth', authRoutes)
 app.use('/api/employees', employeeRoutes)
 app.use('/api', analyticsRoutes)
 app.use('/api/analytics', analyticsRoutes)

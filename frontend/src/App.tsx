@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ThemeProvider, CssBaseline, Box, Typography, Alert } from '@mui/material'
 import { theme } from './theme'
 import { Navbar } from './components/layout/Navbar'
+import { LoginPage } from './components/auth/LoginPage'
 import { KpiCards } from './components/dashboard/KpiCards'
 import { SalaryFilterToolbar } from './components/common/SalaryFilterToolbar'
 import { EmployeeTable } from './components/employees/EmployeeTable'
@@ -11,9 +12,20 @@ import { PaySlipModal } from './components/employees/PaySlipModal'
 import { SalaryHistoryModal } from './components/employees/SalaryHistoryModal'
 import { useEmployees } from './hooks/useEmployees'
 import { useAnalytics } from './hooks/useAnalytics'
-import type { Employee, EmployeeFormData, CompensationUpdateData, NewSalaryRevisionInput } from './types'
+import { api } from './services/api'
+import type { Employee, EmployeeFormData, CompensationUpdateData, NewSalaryRevisionInput, AuthUser } from './types'
 
 export default function App() {
+  // Session Authentication state backed by localStorage / sessionStorage
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
+    try {
+      const saved = localStorage.getItem('paypulse_auth_user') || sessionStorage.getItem('paypulse_auth_user')
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  })
+
   const {
     employees,
     totalRecords,
@@ -58,6 +70,19 @@ export default function App() {
   const showNotification = (message: string, severity: 'success' | 'error' = 'success') => {
     setNotification({ message, severity })
     setTimeout(() => setNotification(null), 3500)
+  }
+
+  // Session Logout Handler
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout')
+    } catch {
+      // Graceful offline fallback
+    }
+    localStorage.removeItem('paypulse_auth_user')
+    sessionStorage.removeItem('paypulse_auth_user')
+    setCurrentUser(null)
+    showNotification('Signed out successfully.')
   }
 
   // Unified Save Handler (Add & Edit)
@@ -114,13 +139,23 @@ export default function App() {
     setEditingEmployee(null)
   }
 
+  // If unauthenticated, present the clean login interface
+  if (!currentUser) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <LoginPage onLoginSuccess={(user) => setCurrentUser(user)} />
+      </ThemeProvider>
+    )
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
       <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', width: '100%' }}>
         {/* Navigation Header */}
-        <Navbar />
+        <Navbar currentUser={currentUser} onLogout={handleLogout} />
 
         {/* Main Workspace */}
         <Box sx={{ flex: 1, py: 2.75, px: { xs: 2, sm: 3.5, md: 4.5 }, maxWidth: 1440, mx: 'auto', width: '100%' }}>

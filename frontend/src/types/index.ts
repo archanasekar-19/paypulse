@@ -129,3 +129,10 @@ export interface NewSalaryRevisionInput {
   changedBy?: string
   notes?: string
 }
+
+export interface AuthUser {
+  name: string
+  email: string
+  role: string
+  organization?: string
+}

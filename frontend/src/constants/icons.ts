@@ -41,7 +41,14 @@ export const AppIcon = {
   // Inactive & Deactivation Actions
   USER_INACTIVE: 'solar:user-cross-rounded-bold-duotone',
   USER_BLOCK: 'solar:user-block-rounded-bold-duotone',
-  DEACTIVATE: 'solar:user-cross-rounded-bold'
+  DEACTIVATE: 'solar:user-cross-rounded-bold',
+
+  // Auth & Session
+  LOCK: 'solar:lock-keyhole-bold-duotone',
+  LOGOUT: 'solar:logout-2-bold-duotone',
+  EYE: 'solar:eye-linear',
+  EYE_CLOSED: 'solar:eye-closed-linear',
+  USER: 'solar:user-bold-duotone'
 } as const
 
 export type AppIcon = (typeof AppIcon)[keyof typeof AppIcon]
