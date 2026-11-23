@@ -256,7 +256,7 @@ describe('AnalyticsService (Macro KPIs over 10,000 Records)', () => {
     expect(summary.countryBreakdown.length).toBe(7)
   })
 
-  it('should strictly exclude soft-deleted/INACTIVE employees from active headcount and macro KPIs', async () => {
+  it('should include all employee records for global headcount while excluding INACTIVE employees from active payroll spend', async () => {
     // 1. Snapshot active count
     const initialSummary = await analyticsService.getSummaryMetrics()
 
@@ -278,9 +278,9 @@ describe('AnalyticsService (Macro KPIs over 10,000 Records)', () => {
     // 3. Soft-delete the temporary employee
     await employeeService.softDeleteEmployee(tempEmp.id, 'Project contract ended')
 
-    // 4. Verify headcount and payroll revert back to initial active totals
+    // 4. Verify headcount retains total employees (active + inactive) while payroll spend reverts to active total
     const afterDeleteSummary = await analyticsService.getSummaryMetrics()
-    expect(afterDeleteSummary.totalEmployees).toBe(initialSummary.totalEmployees)
+    expect(afterDeleteSummary.totalEmployees).toBe(initialSummary.totalEmployees + 1)
     expect(afterDeleteSummary.totalPayrollUSD).toBe(initialSummary.totalPayrollUSD)
 
     // Clean up test employee completely from DB so tests leave no inactive records

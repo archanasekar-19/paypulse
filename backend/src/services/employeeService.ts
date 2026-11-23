@@ -1,5 +1,6 @@
 import { prisma } from '../db/prisma'
 import type { Prisma, Employee as DbEmployee } from '@prisma/client'
+import { analyticsService } from './analyticsService'
 
 export interface GetEmployeesParams {
   page?: number
@@ -254,7 +255,7 @@ export class EmployeeService {
     const netSalary = grossSalary - (insurance + leaveDeduction)
     const netSalaryUSD = Math.round(netSalary * fxRate)
 
-    return prisma.employee.create({
+    const created = await prisma.employee.create({
       data: {
         employeeCode,
         firstName: input.firstName.trim(),
@@ -294,6 +295,9 @@ export class EmployeeService {
         }
       }
     })
+
+    analyticsService.clearCache()
+    return created
   }
 
   /**
@@ -364,7 +368,7 @@ export class EmployeeService {
     const netSalary = grossSalary - (insurance + leaveDeduction + customDeductionsTotal)
     const netSalaryUSD = Math.round(netSalary * fxRate)
 
-    return prisma.employee.update({
+    const updated = await prisma.employee.update({
       where: { id },
       data: {
         employeeCode: input.employeeCode !== undefined && input.employeeCode.trim() ? input.employeeCode.trim() : undefined,
@@ -392,6 +396,9 @@ export class EmployeeService {
         netSalaryUSD
       }
     })
+
+    analyticsService.clearCache()
+    return updated
   }
 
   /**
@@ -468,6 +475,7 @@ export class EmployeeService {
       })
     ])
 
+    analyticsService.clearCache()
     return updated
   }
 
@@ -556,6 +564,7 @@ export class EmployeeService {
       })
     ])
 
+    analyticsService.clearCache()
     return updated
   }
 
