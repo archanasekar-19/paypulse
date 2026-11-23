@@ -1,0 +1,33 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Employee {
+  id            String   @id @default(uuid())
+  employeeCode  String   @unique
+  firstName     String
+  lastName      String
+  email         String   @unique
+  department    String
+  country       String
+  jobTitle      String
+  baseSalary    Float
+  currency      String
+  baseSalaryUSD Float    // Pre-computed normalized USD for fast sorting and aggregations
+  hireDate      DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // B-Tree indexes for sub-15ms search, filtering, and sorting over 10,000 records
+  @@index([department])
+  @@index([country])
+  @@index([baseSalaryUSD])
+  @@index([department, country])
+  @@index([lastName, firstName])
+  @@map("employees")
+}
