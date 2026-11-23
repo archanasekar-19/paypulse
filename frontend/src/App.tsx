@@ -11,7 +11,7 @@ function App() {
           <Icon icon="solar:wallet-money-bold-duotone" width="56" height="56" color="#1976d2" />
         </Box>
 
-        <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+        <Typography variant="h4" component="h1" gutterBottom fontWeight="bold" color="#1976d2">
           PayPulse
         </Typography>
 
