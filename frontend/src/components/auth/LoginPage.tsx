@@ -10,8 +10,7 @@ import {
   Alert,
   CircularProgress,
   FormControlLabel,
-  Checkbox,
-  Chip
+  Checkbox
 } from '@mui/material'
 import { Icon } from '@iconify/react'
 import { AppIcon } from '../../constants/icons'
@@ -27,18 +26,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const envUsername = import.meta.env.VITE_AUTH_USERNAME || 'archanakmhss@gmail.com'
   const envPassword = import.meta.env.VITE_AUTH_PASSWORD || 'paypulse2026'
 
-  const [username, setUsername] = useState(envUsername)
-  const [password, setPassword] = useState(envPassword)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  const handleQuickFill = () => {
-    setUsername(envUsername)
-    setPassword(envPassword)
-    setErrorMessage(null)
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -331,72 +324,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             ) : (
               'Log In'
             )}
-          </Button>
-        </Box>
-
-        {/* Demo Credentials Helper Box */}
-        <Box
-          sx={{
-            mt: 3.5,
-            pt: 2.5,
-            borderTop: '1px solid #f1f5f9',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 1
-          }}
-        >
-          <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.72rem', fontWeight: 600 }}>
-            DEMO CREDENTIALS (ENV CONFIGURED)
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <Chip
-              size="small"
-              icon={<Icon icon={AppIcon.USER} width="13" height="13" />}
-              label={envUsername}
-              onClick={handleQuickFill}
-              clickable
-              sx={{
-                fontSize: '0.72rem',
-                height: 24,
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                color: '#475569',
-                fontWeight: 600,
-                borderRadius: '6px'
-              }}
-            />
-            <Chip
-              size="small"
-              icon={<Icon icon={AppIcon.LOCK} width="13" height="13" />}
-              label="••••••••"
-              onClick={handleQuickFill}
-              clickable
-              sx={{
-                fontSize: '0.72rem',
-                height: 24,
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                color: '#475569',
-                fontWeight: 600,
-                borderRadius: '6px'
-              }}
-            />
-          </Box>
-          <Button
-            size="small"
-            variant="text"
-            onClick={handleQuickFill}
-            sx={{
-              fontSize: '0.72rem',
-              color: '#2563eb',
-              p: 0,
-              minWidth: 'auto',
-              fontWeight: 600,
-              '&:hover': { background: 'none', textDecoration: 'underline' }
-            }}
-          >
-            Auto-fill credentials
           </Button>
         </Box>
       </Paper>
