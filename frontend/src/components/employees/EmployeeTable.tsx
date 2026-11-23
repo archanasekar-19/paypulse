@@ -9,7 +9,10 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Avatar
+  TablePagination,
+  TableSortLabel,
+  Avatar,
+  LinearProgress
 } from '@mui/material'
 import type { Employee } from '../../types'
 import { formatCurrency, getInitials } from '../../utils/formatters'
@@ -17,17 +20,31 @@ import { getDepartmentStyle } from '../../constants/departments'
 
 interface EmployeeTableProps {
   employees: Employee[]
-  title?: string
-  subtitle?: string
+  totalRecords: number
+  currentPage: number
+  pageSize: number
+  sortBy: 'salary' | 'name' | 'department' | 'country' | 'hireDate'
+  sortOrder: 'asc' | 'desc'
+  isLoading?: boolean
+  onPageChange: (newPage: number) => void
+  onPageSizeChange: (newPageSize: number) => void
+  onSortChange: (column: 'salary' | 'name' | 'department' | 'country' | 'hireDate') => void
 }
 
 export const EmployeeTable: React.FC<EmployeeTableProps> = ({
   employees,
-  title = 'Employee Salary Roster',
-  subtitle = 'Individual compensation details and contracts'
+  totalRecords,
+  currentPage,
+  pageSize,
+  sortBy,
+  sortOrder,
+  isLoading = false,
+  onPageChange,
+  onPageSizeChange,
+  onSortChange
 }) => {
   return (
-    <Paper elevation={0} sx={{ overflow: 'hidden' }}>
+    <Paper elevation={0} sx={{ overflow: 'hidden', border: '1px solid #e2e8f0' }}>
       {/* Table Header Section */}
       <Box
         sx={{
@@ -41,24 +58,68 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
       >
         <Box>
           <Typography variant="h6" fontWeight={700}>
-            {title}
+            Employee Salary Roster
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {subtitle}
+            Live compensation records from backend database (10,000 employees)
           </Typography>
         </Box>
       </Box>
+
+      {/* Loading Indicator */}
+      {isLoading && <LinearProgress sx={{ height: 3 }} />}
 
       {/* Table Container */}
       <TableContainer>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Employee</TableCell>
-              <TableCell>Department</TableCell>
-              <TableCell>Country</TableCell>
+              {/* Name Column */}
+              <TableCell>
+                <TableSortLabel
+                  active={sortBy === 'name'}
+                  direction={sortBy === 'name' ? sortOrder : 'asc'}
+                  onClick={() => onSortChange('name')}
+                >
+                  Employee
+                </TableSortLabel>
+              </TableCell>
+
+              {/* Department Column */}
+              <TableCell>
+                <TableSortLabel
+                  active={sortBy === 'department'}
+                  direction={sortBy === 'department' ? sortOrder : 'asc'}
+                  onClick={() => onSortChange('department')}
+                >
+                  Department
+                </TableSortLabel>
+              </TableCell>
+
+              {/* Country Column */}
+              <TableCell>
+                <TableSortLabel
+                  active={sortBy === 'country'}
+                  direction={sortBy === 'country' ? sortOrder : 'asc'}
+                  onClick={() => onSortChange('country')}
+                >
+                  Country
+                </TableSortLabel>
+              </TableCell>
+
+              {/* Job Title */}
               <TableCell>Job Title</TableCell>
-              <TableCell align="right">Base Salary</TableCell>
+
+              {/* Base Salary */}
+              <TableCell align="right">
+                <TableSortLabel
+                  active={sortBy === 'salary'}
+                  direction={sortBy === 'salary' ? sortOrder : 'desc'}
+                  onClick={() => onSortChange('salary')}
+                >
+                  Base Salary
+                </TableSortLabel>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -76,7 +137,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                       transition: 'background-color 0.15s ease'
                     }}
                   >
-                    {/* Employee Name & Email */}
+                    {/* Employee Profile */}
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         <Avatar
@@ -150,7 +211,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
               <TableRow>
                 <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
                   <Typography variant="body2" color="text.secondary">
-                    No employee records found.
+                    {isLoading ? 'Loading employee records from database...' : 'No employees found matching the search criteria.'}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -158,6 +219,21 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Pagination Controls */}
+      <TablePagination
+        rowsPerPageOptions={[10, 25, 50, 100]}
+        component="div"
+        count={totalRecords}
+        rowsPerPage={pageSize}
+        page={currentPage - 1} // MUI uses 0-based page index
+        onPageChange={(_, newPage) => onPageChange(newPage + 1)}
+        onRowsPerPageChange={(e) => onPageSizeChange(parseInt(e.target.value, 10))}
+        sx={{
+          borderTop: '1px solid #e2e8f0',
+          backgroundColor: '#ffffff'
+        }}
+      />
     </Paper>
   )
 }

@@ -1,6 +1,7 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
-import type { Employee, CurrencyCode } from '../../types'
+import type { Employee } from '../../types'
+import { api } from '../../services/api'
 import { MOCK_EMPLOYEES } from '../mock/mockData'
 
 export interface EmployeeState {
@@ -11,23 +12,49 @@ export interface EmployeeState {
   searchQuery: string
   selectedDepartment: string
   selectedCountry: string
-  sortBy: 'salary' | 'name' | 'department' | 'country'
+  sortBy: 'salary' | 'name' | 'department' | 'country' | 'hireDate'
   sortOrder: 'asc' | 'desc'
   isLoading: boolean
+  error: string | null
 }
 
 const initialState: EmployeeState = {
   items: MOCK_EMPLOYEES,
-  totalRecords: 10000, // Reflects the organizational scale
+  totalRecords: 10000,
   currentPage: 1,
-  pageSize: 10,
+  pageSize: 25,
   searchQuery: '',
   selectedDepartment: 'ALL',
   selectedCountry: 'ALL',
   sortBy: 'salary',
   sortOrder: 'desc',
-  isLoading: false
+  isLoading: false,
+  error: null
 }
+
+// Async Thunk: Fetch paginated, filtered employees from Backend API
+export const fetchEmployees = createAsyncThunk(
+  'employees/fetchEmployees',
+  async (
+    params: {
+      page?: number
+      limit?: number
+      search?: string
+      department?: string
+      country?: string
+      sortBy?: string
+      sortOrder?: string
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await api.get('/employees', { params })
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch employees')
+    }
+  }
+)
 
 export const employeeSlice = createSlice({
   name: 'employees',
@@ -35,7 +62,7 @@ export const employeeSlice = createSlice({
   reducers: {
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload
-      state.currentPage = 1 // Reset to page 1 on new search
+      state.currentPage = 1
     },
     setSelectedDepartment: (state, action: PayloadAction<string>) => {
       state.selectedDepartment = action.payload
@@ -58,23 +85,23 @@ export const employeeSlice = createSlice({
     ) => {
       state.sortBy = action.payload.sortBy
       state.sortOrder = action.payload.sortOrder
-    },
-    updateSalary: (
-      state,
-      action: PayloadAction<{ id: string; newSalary: number; currency?: CurrencyCode }>
-    ) => {
-      const index = state.items.findIndex((e) => e.id === action.payload.id)
-      if (index !== -1) {
-        state.items[index].salary = action.payload.newSalary
-        if (action.payload.currency) {
-          state.items[index].currency = action.payload.currency
-        }
-      }
-    },
-    addEmployee: (state, action: PayloadAction<Employee>) => {
-      state.items.unshift(action.payload)
-      state.totalRecords += 1
     }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchEmployees.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(fetchEmployees.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.items = action.payload.data
+        state.totalRecords = action.payload.pagination.totalRecords
+      })
+      .addCase(fetchEmployees.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
+      })
   }
 })
 
@@ -84,9 +111,7 @@ export const {
   setSelectedCountry,
   setPage,
   setPageSize,
-  setSort,
-  updateSalary,
-  addEmployee
+  setSort
 } = employeeSlice.actions
 
 export default employeeSlice.reducer
