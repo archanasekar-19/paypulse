@@ -82,10 +82,10 @@ export default function App() {
     await refreshAnalytics()
   }
 
-  // Delete
-  const handleConfirmDelete = async (id: string) => {
-    await deleteEmployee(id)
-    showNotification('Employee removed successfully from roster!')
+  // Soft-Delete / Deactivate (HTTP PATCH to INACTIVE)
+  const handleConfirmDelete = async (id: string, reason?: string) => {
+    await deleteEmployee(id, reason)
+    showNotification('Employee deactivated (marked INACTIVE) and preserved in audit log!')
     await refreshAnalytics()
   }
 

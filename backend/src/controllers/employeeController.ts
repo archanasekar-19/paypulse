@@ -7,7 +7,7 @@ export class EmployeeController {
    */
   async getEmployees(req: Request, res: Response) {
     try {
-      const { page, limit, search, department, country, sortBy, sortOrder } = req.query
+      const { page, limit, search, department, country, status, sortBy, sortOrder } = req.query
 
       const result = await employeeService.getEmployees({
         page: page ? Number(page) : undefined,
@@ -15,6 +15,7 @@ export class EmployeeController {
         search: search ? String(search) : undefined,
         department: department ? String(department) : undefined,
         country: country ? String(country) : undefined,
+        status: status ? String(status) : undefined,
         sortBy: sortBy as any,
         sortOrder: sortOrder as any
       })
@@ -31,12 +32,13 @@ export class EmployeeController {
    */
   async exportEmployees(req: Request, res: Response) {
     try {
-      const { search, department, country, sortBy, sortOrder } = req.query
+      const { search, department, country, status, sortBy, sortOrder } = req.query
 
       const csvContent = await employeeService.exportEmployeesToCSV({
         search: search ? String(search) : undefined,
         department: department ? String(department) : undefined,
         country: country ? String(country) : undefined,
+        status: status ? String(status) : undefined,
         sortBy: sortBy as any,
         sortOrder: sortOrder as any
       })
@@ -244,7 +246,7 @@ export class EmployeeController {
 
       const updated = await employeeService.updateSalary(id, newSalary, {
         reason: reason.trim(),
-        changedBy: changedBy || 'Elena Vance (HR Manager)',
+        changedBy: changedBy || 'Archana Sekar (HR Manager)',
         effectiveDate,
         notes
       })
@@ -266,23 +268,47 @@ export class EmployeeController {
   }
 
   /**
-   * DELETE /api/employees/:id (Delete Employee)
+   * PATCH /api/employees/:id/status (Soft delete / Deactivate or Re-activate Employee)
    */
-  async deleteEmployee(req: Request, res: Response) {
+  async updateEmployeeStatus(req: Request, res: Response) {
     try {
       const id = Array.isArray(req.params.id) ? req.params.id[0]! : (req.params.id as string)
+      const { status = 'INACTIVE', reason, changedBy } = req.body
 
-      await employeeService.deleteEmployee(id)
+      if (status !== 'ACTIVE' && status !== 'INACTIVE') {
+        return res.status(400).json({ error: 'Status must be ACTIVE or INACTIVE' })
+      }
+
+      const updated = await employeeService.updateEmployeeStatus(
+        id,
+        status,
+        reason,
+        changedBy || 'Archana Sekar (HR Manager)'
+      )
+
       return res.status(200).json({
-        message: 'Employee deleted successfully'
+        message: status === 'INACTIVE'
+          ? 'Employee successfully deactivated (soft-deleted) and archived in audit log'
+          : 'Employee successfully re-activated',
+        data: updated
       })
     } catch (error: any) {
       if (error.message === 'Employee not found') {
         return res.status(404).json({ error: 'Employee not found' })
       }
-      console.error('Error deleting employee:', error)
-      return res.status(500).json({ error: 'Failed to delete employee' })
+      console.error('Error updating employee status:', error)
+      return res.status(500).json({ error: 'Failed to update employee status' })
     }
+  }
+
+  /**
+   * DELETE /api/employees/:id
+   * Hard DELETE is disabled by design to protect compliance, salary history, and audit trails.
+   */
+  async deleteEmployee(req: Request, res: Response) {
+    return res.status(405).json({
+      error: 'Direct DELETE method is not permitted to preserve historical payroll and audit trail compliance. Use PATCH /api/employees/:id/status with { status: "INACTIVE" } for soft deactivation.'
+    })
   }
 }
 

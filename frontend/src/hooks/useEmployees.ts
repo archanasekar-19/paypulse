@@ -151,9 +151,9 @@ export const useEmployees = () => {
     await refreshEmployees()
   }
 
-  // Delete employee
-  const deleteEmployee = async (id: string) => {
-    await dispatch(deleteEmployeeAsync(id)).unwrap()
+  // Soft-delete / Deactivate employee (PATCH to INACTIVE)
+  const deleteEmployee = async (id: string, reason?: string) => {
+    await dispatch(deleteEmployeeAsync({ id, reason })).unwrap()
     await refreshEmployees()
   }
 

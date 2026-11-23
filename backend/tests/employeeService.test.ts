@@ -78,7 +78,7 @@ describe('EmployeeService & Server-Side Filtering (10,000 Employees)', () => {
     // 2. Update Salary with Audit Trail Reason
     const updatedSalary = await employeeService.updateSalary(created.id, 135000, {
       reason: 'Promotion to Senior Fellow',
-      changedBy: 'Elena Vance (HR Manager)',
+      changedBy: 'Archana Sekar (HR Manager)',
       notes: 'Outstanding contribution to cryptography research.'
     })
     expect(updatedSalary.baseSalary).toBe(135000)
@@ -93,7 +93,7 @@ describe('EmployeeService & Server-Side Filtering (10,000 Employees)', () => {
     expect(historyData.history[0]?.newAmount).toBe(135000)
     expect(historyData.history[0]?.oldAmount).toBe(120000)
     expect(historyData.history[0]?.reason).toBe('Promotion to Senior Fellow')
-    expect(historyData.history[0]?.changedBy).toBe('Elena Vance (HR Manager)')
+    expect(historyData.history[0]?.changedBy).toBe('Archana Sekar (HR Manager)')
     expect(historyData.history[0]?.changePercent).toBe(12.5) // (135k - 120k) / 120k = +12.5%
     // Initial entry
     expect(historyData.history[1]?.newAmount).toBe(120000)
@@ -125,9 +125,38 @@ describe('EmployeeService & Server-Side Filtering (10,000 Employees)', () => {
     expect(updatedRecord.netSalary).toBe(177500 - (9750 + 500)) // 167250
     expect(updatedRecord.netSalaryUSD).toBe(Math.round(167250 * 1.28))
 
-    // 4. Delete
-    await employeeService.deleteEmployee(created.id)
-    await expect(employeeService.deleteEmployee(created.id)).rejects.toThrow('Employee not found')
+    // 4. Soft Delete (Deactivate to INACTIVE status with audit record)
+    const softDeleted = await employeeService.softDeleteEmployee(created.id, 'Offboarding Alan Turing')
+    expect(softDeleted.status).toBe('INACTIVE')
+    expect(softDeleted.deletedAt).not.toBeNull()
+
+    // 4b. Verify excluded from active employee queries by default
+    const activeSearch = await employeeService.getEmployees({ search: uniqueEmail })
+    expect(activeSearch.data.length).toBe(0)
+
+    // 4c. Verify retrievable when explicitly querying INACTIVE or ALL
+    const inactiveSearch = await employeeService.getEmployees({ search: uniqueEmail, status: 'INACTIVE' })
+    expect(inactiveSearch.data.length).toBe(1)
+    expect(inactiveSearch.data[0]?.status).toBe('INACTIVE')
+    expect(inactiveSearch.data[0]?.email).toBe(uniqueEmail)
+
+    // 4d. Verify SalaryHistory preserves complete audit trail including offboarding
+    const historyAfterSoftDelete = await employeeService.getSalaryHistory(created.id)
+    expect(historyAfterSoftDelete.history.length).toBe(3)
+    expect(historyAfterSoftDelete.history[0]?.reason).toBe('Offboarding Alan Turing')
+    expect(historyAfterSoftDelete.history[0]?.changedBy).toBe('Archana Sekar (HR Manager)')
+
+    // 4e. Verify Re-activation works seamlessly via updateEmployeeStatus
+    const reactivated = await employeeService.updateEmployeeStatus(created.id, 'ACTIVE')
+    expect(reactivated.status).toBe('ACTIVE')
+    expect(reactivated.deletedAt).toBeNull()
+
+    const activeAgain = await employeeService.getEmployees({ search: uniqueEmail })
+    expect(activeAgain.data.length).toBe(1)
+    expect(activeAgain.data[0]?.status).toBe('ACTIVE')
+
+    // Soft delete once more for test cleanup
+    await employeeService.softDeleteEmployee(created.id, 'Test completion')
   })
 
   it('should export filtered employee payroll records into RFC-4180 CSV format', async () => {
@@ -166,5 +195,33 @@ describe('AnalyticsService (Macro KPIs over 10,000 Records)', () => {
     expect(summary.medianSalaryUSD).toBeGreaterThan(50_000)
     expect(summary.departmentBreakdown.length).toBeGreaterThan(0)
     expect(summary.countryBreakdown.length).toBe(7)
+  })
+
+  it('should strictly exclude soft-deleted/INACTIVE employees from active headcount and macro KPIs', async () => {
+    // 1. Snapshot active count
+    const initialSummary = await analyticsService.getSummaryMetrics()
+
+    // 2. Create a temporary employee
+    const tempEmp = await employeeService.createEmployee({
+      firstName: 'Temporary',
+      lastName: 'Contractor',
+      email: `temp.contractor.${Date.now()}@acme.com`,
+      department: 'Finance',
+      country: 'United States',
+      jobTitle: 'Financial Analyst',
+      baseSalary: 100000
+    })
+
+    const afterCreateSummary = await analyticsService.getSummaryMetrics()
+    expect(afterCreateSummary.totalEmployees).toBe(initialSummary.totalEmployees + 1)
+    expect(afterCreateSummary.totalPayrollUSD).toBe(initialSummary.totalPayrollUSD + 100000)
+
+    // 3. Soft-delete the temporary employee
+    await employeeService.softDeleteEmployee(tempEmp.id, 'Project contract ended')
+
+    // 4. Verify headcount and payroll revert back to initial active totals
+    const afterDeleteSummary = await analyticsService.getSummaryMetrics()
+    expect(afterDeleteSummary.totalEmployees).toBe(initialSummary.totalEmployees)
+    expect(afterDeleteSummary.totalPayrollUSD).toBe(initialSummary.totalPayrollUSD)
   })
 })

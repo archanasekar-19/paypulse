@@ -5,7 +5,9 @@ export class AnalyticsService {
    * Calculates company-wide compensation KPIs directly in SQL using B-Tree indexes
    */
   async getSummaryMetrics() {
-    const totalEmployees = await prisma.employee.count()
+    const whereActive = { status: 'ACTIVE' }
+
+    const totalEmployees = await prisma.employee.count({ where: whereActive })
     if (totalEmployees === 0) {
       return {
         totalEmployees: 0,
@@ -19,6 +21,7 @@ export class AnalyticsService {
 
     // 1. Total & Average USD Payroll using DB aggregate
     const aggregate = await prisma.employee.aggregate({
+      where: whereActive,
       _sum: { baseSalaryUSD: true },
       _avg: { baseSalaryUSD: true }
     })
@@ -29,6 +32,7 @@ export class AnalyticsService {
     // 2. Exact Median Salary Calculation (O(log N) lookup using index on baseSalaryUSD)
     const middleOffset = Math.floor(totalEmployees / 2)
     const medianRecord = await prisma.employee.findFirst({
+      where: whereActive,
       skip: middleOffset,
       orderBy: { baseSalaryUSD: 'asc' },
       select: { baseSalaryUSD: true }
@@ -38,6 +42,7 @@ export class AnalyticsService {
     // 3. Department Breakdown (Headcount & Total Spend)
     const deptGroups = await prisma.employee.groupBy({
       by: ['department'],
+      where: whereActive,
       _count: { _all: true },
       _sum: { baseSalaryUSD: true },
       _avg: { baseSalaryUSD: true }
@@ -53,6 +58,7 @@ export class AnalyticsService {
     // 4. Country Breakdown
     const countryGroups = await prisma.employee.groupBy({
       by: ['country', 'currency'],
+      where: whereActive,
       _count: { _all: true },
       _sum: { baseSalaryUSD: true }
     })

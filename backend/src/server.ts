@@ -22,6 +22,7 @@ app.get('/api/health', (req: Request, res: Response) => {
 // Mount application REST API routes
 app.use('/api/employees', employeeRoutes)
 app.use('/api', analyticsRoutes)
+app.use('/api/analytics', analyticsRoutes)
 
 app.listen(PORT, () => {
   console.log(`PayPulse Backend running at http://localhost:${PORT}`)

@@ -136,15 +136,26 @@ export const updateSalaryAsync = createAsyncThunk(
   }
 )
 
-// Async Thunk: Delete employee
+// Async Thunk: Soft-delete / Deactivate employee (PATCH to INACTIVE)
 export const deleteEmployeeAsync = createAsyncThunk(
   'employees/deleteEmployeeAsync',
-  async (id: string, { rejectWithValue }) => {
+  async (
+    arg: { id: string; reason?: string } | string,
+    { rejectWithValue }
+  ) => {
     try {
-      await api.delete(`/employees/${id}`)
-      return id
+      const employeeId = typeof arg === 'string' ? arg : arg.id
+      const deactivationReason =
+        typeof arg === 'object' && arg.reason
+          ? arg.reason
+          : 'Deactivated from active payroll roster'
+      await api.patch(`/employees/${employeeId}/status`, {
+        status: 'INACTIVE',
+        reason: deactivationReason
+      })
+      return employeeId
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to delete employee')
+      return rejectWithValue(error.response?.data?.error || 'Failed to deactivate employee')
     }
   }
 )

@@ -7,6 +7,7 @@ export interface GetEmployeesParams {
   search?: string
   department?: string
   country?: string
+  status?: string
   sortBy?: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'netSalary'
   sortOrder?: 'asc' | 'desc'
 }
@@ -86,13 +87,23 @@ export class EmployeeService {
     search?: string
     department?: string
     country?: string
+    status?: string
     sortBy?: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'netSalary'
     sortOrder?: 'asc' | 'desc'
   }) {
-    const { search, department, country, sortBy = 'salary', sortOrder = 'desc' } = params
+    const { search, department, country, status, sortBy = 'salary', sortOrder = 'desc' } = params
 
     // Build Prisma WHERE filter condition
     const where: Prisma.EmployeeWhereInput = {}
+
+    // Status filter: defaults to ACTIVE unless specified as ALL or explicit status
+    if (status === 'ALL') {
+      // do not filter by status
+    } else if (status) {
+      where.status = status
+    } else {
+      where.status = 'ACTIVE'
+    }
 
     if (department && department !== 'ALL') {
       where.department = department
@@ -104,12 +115,24 @@ export class EmployeeService {
 
     if (search && search.trim() !== '') {
       const query = search.trim()
-      where.OR = [
+      const searchConditions: Prisma.EmployeeWhereInput[] = [
         { firstName: { contains: query } },
         { lastName: { contains: query } },
         { email: { contains: query } },
         { jobTitle: { contains: query } }
       ]
+
+      const parts = query.split(/\s+/).filter(Boolean)
+      if (parts.length >= 2) {
+        searchConditions.push({
+          AND: [
+            { firstName: { contains: parts[0] } },
+            { lastName: { contains: parts.slice(1).join(' ') } }
+          ]
+        })
+      }
+
+      where.OR = searchConditions
     }
 
     let orderBy: Prisma.EmployeeOrderByWithRelationInput = { baseSalaryUSD: sortOrder }
@@ -177,6 +200,8 @@ export class EmployeeService {
       netSalaryUSD: emp.netSalaryUSD,
       currency: emp.currency,
       baseSalaryUSD: emp.baseSalaryUSD,
+      status: emp.status,
+      deletedAt: emp.deletedAt ? emp.deletedAt.toISOString() : null,
       hireDate: emp.hireDate.toISOString()
     }))
 
@@ -256,7 +281,7 @@ export class EmployeeService {
             newAmountUSD: baseSalaryUSD,
             changePercent: 0,
             reason: (input as any).reason || 'Initial Contract Offer',
-            changedBy: (input as any).changedBy || 'Elena Vance (HR Manager)',
+            changedBy: (input as any).changedBy || 'Archana Sekar (HR Manager)',
             effectiveDate: new Date(),
             notes: (input as any).notes || 'Initial onboarding compensation package.'
           }
@@ -400,7 +425,7 @@ export class EmployeeService {
       (baseSalary > oldSalary
         ? 'Annual Merit & Performance Review'
         : 'Compensation Adjustment')
-    const changedBy = options?.changedBy || 'Elena Vance (HR Manager)'
+    const changedBy = options?.changedBy || 'Archana Sekar (HR Manager)'
     const effectiveDate = options?.effectiveDate
       ? new Date(options.effectiveDate)
       : new Date()
@@ -478,17 +503,67 @@ export class EmployeeService {
   }
 
   /**
-   * Deletes an employee by ID
+   * Soft-deletes or restores an employee by updating their status (ACTIVE / INACTIVE)
+   * and writing an immutable audit log entry to SalaryHistory to guarantee data integrity.
    */
-  async deleteEmployee(id: string) {
+  async updateEmployeeStatus(
+    id: string,
+    status: 'ACTIVE' | 'INACTIVE',
+    reason?: string,
+    changedBy?: string
+  ) {
     const employee = await prisma.employee.findUnique({ where: { id } })
     if (!employee) {
       throw new Error('Employee not found')
     }
 
-    return prisma.employee.delete({
-      where: { id }
-    })
+    const isDeactivating = status === 'INACTIVE'
+    const auditReason = reason || (isDeactivating ? 'Employee Deactivated / Offboarded' : 'Employee Re-activated')
+    const auditAuthor = changedBy || 'Archana Sekar (HR Manager)'
+    const notes = isDeactivating
+      ? (reason ? `Deactivated by ${auditAuthor}: ${reason}` : `Record marked INACTIVE via soft-delete by ${auditAuthor}`)
+      : `Record re-activated by ${auditAuthor}`
+
+    const [updated] = await prisma.$transaction([
+      prisma.employee.update({
+        where: { id },
+        data: {
+          status,
+          deletedAt: isDeactivating ? new Date() : null
+        }
+      }),
+      prisma.salaryHistory.create({
+        data: {
+          employeeId: id,
+          oldAmount: employee.baseSalary,
+          newAmount: employee.baseSalary,
+          currency: employee.currency,
+          oldAmountUSD: employee.baseSalaryUSD,
+          newAmountUSD: employee.baseSalaryUSD,
+          changePercent: 0,
+          reason: auditReason,
+          changedBy: auditAuthor,
+          effectiveDate: new Date(),
+          notes
+        }
+      })
+    ])
+
+    return updated
+  }
+
+  /**
+   * Soft-deletes an employee by setting status = 'INACTIVE' and recording audit trail
+   */
+  async softDeleteEmployee(id: string, reason?: string, changedBy?: string) {
+    return this.updateEmployeeStatus(id, 'INACTIVE', reason, changedBy)
+  }
+
+  /**
+   * Legacy delete method: delegates to soft delete to prevent destructive data loss
+   */
+  async deleteEmployee(id: string, reason?: string) {
+    return this.softDeleteEmployee(id, reason)
   }
 
   /**
@@ -498,6 +573,7 @@ export class EmployeeService {
     search?: string
     department?: string
     country?: string
+    status?: string
     sortBy?: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'netSalary'
     sortOrder?: 'asc' | 'desc'
   }): Promise<string> {
@@ -516,6 +592,7 @@ export class EmployeeService {
       'Department',
       'Country',
       'Job Title',
+      'Status',
       'Currency',
       'Base Salary',
       'Bonus',
@@ -549,6 +626,7 @@ export class EmployeeService {
         escapeCSV(emp.department),
         escapeCSV(emp.country),
         escapeCSV(emp.jobTitle),
+        escapeCSV(emp.status),
         escapeCSV(emp.currency),
         emp.baseSalary,
         emp.bonus,

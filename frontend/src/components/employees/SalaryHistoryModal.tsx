@@ -128,7 +128,7 @@ export const SalaryHistoryModal: React.FC<SalaryHistoryModalProps> = ({
         newSalary: salaryNum,
         reason: selectedReason,
         effectiveDate: effectiveDate || new Date().toISOString(),
-        changedBy: 'Elena Vance (HR Manager)',
+        changedBy: 'Archana Sekar (HR Manager)',
         notes: notes.trim() || undefined
       })
 

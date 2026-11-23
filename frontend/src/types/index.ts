@@ -31,6 +31,8 @@ export interface Employee {
   netSalary?: number
   netSalaryUSD?: number
   currency: CurrencyCode
+  status?: 'ACTIVE' | 'INACTIVE'
+  deletedAt?: string | null
 }
 
 export interface EmployeeFormData {

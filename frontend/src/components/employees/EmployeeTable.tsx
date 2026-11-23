@@ -326,7 +326,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                           </IconButton>
                         </Tooltip>
 
-                        <Tooltip title="Remove Employee">
+                        <Tooltip title="Deactivate Employee (Mark Inactive)">
                           <IconButton
                             size="small"
                             onClick={() => onDeleteEmployee(emp)}
@@ -335,11 +335,11 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                               height: 30,
                               borderRadius: '8px',
                               backgroundColor: '#fff0ee',
-                              color: '#ff5442',
+                              color: '#ea580c',
                               '&:hover': { backgroundColor: '#fee2e2' }
                             }}
                           >
-                            <Icon icon={AppIcon.DELETE} width="15" height="15" />
+                            <Icon icon={AppIcon.USER_INACTIVE} width="16" height="16" />
                           </IconButton>
                         </Tooltip>
                       </Box>

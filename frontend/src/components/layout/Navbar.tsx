@@ -11,7 +11,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   organizationName = 'ACME Corp • Global',
-  userName = 'Elena Vance',
+  userName = 'Archana Sekar',
   userRole = 'HR Manager'
 }) => {
   return (
@@ -83,7 +83,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 border: '1px solid #bfdbfe'
               }}
             >
-              EV
+              {userName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
             </Avatar>
             <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.15, fontSize: '0.8125rem', color: '#1e242e' }}>

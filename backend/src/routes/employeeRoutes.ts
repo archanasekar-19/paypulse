@@ -24,7 +24,13 @@ router.get('/:id/history', (req, res) => employeeController.getSalaryHistory(req
 // POST /api/employees/:id/history - Record a new salary change event to timeline
 router.post('/:id/history', (req, res) => employeeController.addSalaryRevision(req, res))
 
-// DELETE /api/employees/:id - Delete employee
+// PATCH /api/employees/:id/status - Soft delete / Deactivate (status: INACTIVE) or re-activate employee
+router.patch('/:id/status', (req, res) => employeeController.updateEmployeeStatus(req, res))
+
+// PATCH /api/employees/:id - Also support PATCH on base resource
+router.patch('/:id', (req, res) => employeeController.updateEmployeeStatus(req, res))
+
+// DELETE /api/employees/:id - Disabled with 405 Method Not Allowed in favor of PATCH soft-delete
 router.delete('/:id', (req, res) => employeeController.deleteEmployee(req, res))
 
 export default router

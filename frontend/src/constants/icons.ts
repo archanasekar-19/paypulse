@@ -36,7 +36,12 @@ export const AppIcon = {
   CALENDAR: 'solar:calendar-date-bold-duotone',
   DANGER: 'solar:danger-triangle-bold',
   SHIELD: 'solar:shield-warning-bold',
-  INFO: 'solar:info-circle-linear'
+  INFO: 'solar:info-circle-linear',
+
+  // Inactive & Deactivation Actions
+  USER_INACTIVE: 'solar:user-cross-rounded-bold-duotone',
+  USER_BLOCK: 'solar:user-block-rounded-bold-duotone',
+  DEACTIVATE: 'solar:user-cross-rounded-bold'
 } as const
 
 export type AppIcon = (typeof AppIcon)[keyof typeof AppIcon]

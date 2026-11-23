@@ -74,7 +74,7 @@ async function backfillSalaryHistory() {
           newAmountUSD: emp.baseSalaryUSD || 0,
           changePercent,
           reason: 'Annual Merit & Performance Review',
-          changedBy: 'Elena Vance (HR Manager)',
+          changedBy: 'Archana Sekar (HR Manager)',
           effectiveDate: reviewDate,
           notes: 'Exceeds expectations. Adjusted to reflect annual merit band.'
         })
