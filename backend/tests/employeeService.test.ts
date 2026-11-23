@@ -54,6 +54,19 @@ describe('EmployeeService & Server-Side Filtering (10,000 Employees)', () => {
     ).toBe(true)
   })
 
+  it('should search employees by unique employee code', async () => {
+    // 1. Fetch a known employee to get their employee code
+    const list = await employeeService.getEmployees({ page: 1, limit: 1 })
+    expect(list.data.length).toBe(1)
+    const knownCode = list.data[0]?.employeeCode
+    expect(knownCode).toBeDefined()
+
+    // 2. Search by that exact employee code
+    const result = await employeeService.getEmployees({ search: knownCode })
+    expect(result.data.length).toBeGreaterThanOrEqual(1)
+    expect(result.data.some((emp) => emp.employeeCode === knownCode)).toBe(true)
+  })
+
   it('should support full CRUD operations (Create, Read, Update, Delete)', async () => {
     // 1. Create
     const uniqueEmail = `test.artisan.${Date.now()}@acme.com`

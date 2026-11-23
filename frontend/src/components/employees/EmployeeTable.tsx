@@ -205,7 +205,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                           {initials}
                         </Avatar>
                         <Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
                             <Typography
                               variant="subtitle2"
                               sx={{
@@ -215,6 +215,25 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                             >
                               {emp.name}
                             </Typography>
+                            {emp.employeeCode && (
+                              <Box
+                                component="span"
+                                sx={{
+                                  px: 0.75,
+                                  py: 0.15,
+                                  borderRadius: '4px',
+                                  fontSize: '0.68rem',
+                                  fontWeight: 600,
+                                  fontFamily: 'monospace',
+                                  backgroundColor: '#f1f5f9',
+                                  color: '#475569',
+                                  border: '1px solid #e2e8f0',
+                                  lineHeight: 1.2
+                                }}
+                              >
+                                {emp.employeeCode}
+                              </Box>
+                            )}
                             {emp.status === 'INACTIVE' && (
                               <Box
                                 component="span"

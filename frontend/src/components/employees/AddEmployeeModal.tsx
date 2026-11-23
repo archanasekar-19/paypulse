@@ -21,6 +21,7 @@ import { DEPARTMENTS, COUNTRIES } from '../../constants/filters'
 import type { Employee } from '../../types'
 
 export interface EmployeeFormData {
+  employeeCode?: string
   firstName: string
   lastName: string
   email: string
@@ -59,6 +60,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
 }) => {
   const isEditMode = Boolean(employee)
 
+  const [employeeCode, setEmployeeCode] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -75,6 +77,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     if (open) {
       if (employee) {
         const names = (employee.name || '').trim().split(' ')
+        setEmployeeCode(employee.employeeCode || '')
         setFirstName(employee.firstName || names[0] || '')
         setLastName(employee.lastName || (names.length > 1 ? names.slice(1).join(' ') : ''))
         setEmail(employee.email || '')
@@ -85,6 +88,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
         setBaseSalary(employee.salary ? String(employee.salary) : '')
         setError(null)
       } else {
+        setEmployeeCode('')
         setFirstName('')
         setLastName('')
         setEmail('')
@@ -124,6 +128,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
       setIsSubmitting(true)
       setError(null)
       await action({
+        employeeCode: employeeCode.trim() || undefined,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim(),
@@ -185,7 +190,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
             />
           </Grid>
 
-          {/* Row 2: Work Email & Job Title */}
+          {/* Row 2: Work Email & Employee Code */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               label="Work Email"
@@ -200,17 +205,17 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Job Title"
+              label="Employee Code"
               size="small"
               fullWidth
-              required
-              placeholder="e.g. Senior Engineer"
-              value={jobTitle}
-              onChange={(e) => setJobTitle(e.target.value)}
+              placeholder="Auto-assigned (e.g. ACM-01528)"
+              value={employeeCode}
+              onChange={(e) => setEmployeeCode(e.target.value)}
+              helperText="Optional; auto-assigned if left blank"
             />
           </Grid>
 
-          {/* Row 3: Department & Country */}
+          {/* Row 3: Department & Job Title */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormControl size="small" fullWidth required>
               <InputLabel id="add-dept-label">Department</InputLabel>
@@ -229,6 +234,19 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
             </FormControl>
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              label="Job Title"
+              size="small"
+              fullWidth
+              required
+              placeholder="e.g. Senior Engineer"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+            />
+          </Grid>
+
+          {/* Row 4: Country & Currency */}
+          <Grid size={{ xs: 12, sm: 6 }}>
             <FormControl size="small" fullWidth required>
               <InputLabel id="add-country-label">Country</InputLabel>
               <Select
@@ -244,20 +262,6 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 ))}
               </Select>
             </FormControl>
-          </Grid>
-
-          {/* Row 4: Starting Salary & Contract Currency (Perfect Symmetry) */}
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              label={isEditMode ? 'Annual Base Salary' : 'Starting Base Salary'}
-              type="number"
-              size="small"
-              fullWidth
-              required
-              placeholder="e.g. 125000"
-              value={baseSalary}
-              onChange={(e) => setBaseSalary(e.target.value)}
-            />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormControl size="small" fullWidth required>
@@ -275,6 +279,20 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 ))}
               </Select>
             </FormControl>
+          </Grid>
+
+          {/* Row 5: Starting / Base Salary */}
+          <Grid size={{ xs: 12 }}>
+            <TextField
+              label={isEditMode ? 'Annual Base Salary' : 'Starting Base Salary'}
+              type="number"
+              size="small"
+              fullWidth
+              required
+              placeholder="e.g. 125000"
+              value={baseSalary}
+              onChange={(e) => setBaseSalary(e.target.value)}
+            />
           </Grid>
         </Grid>
       </DialogContent>

@@ -108,6 +108,7 @@ export const useEmployees = () => {
 
   // Create employee
   const createEmployee = async (payload: {
+    employeeCode?: string
     firstName: string
     lastName: string
     email: string
@@ -127,6 +128,7 @@ export const useEmployees = () => {
   const updateEmployee = async (
     id: string,
     payload: {
+      employeeCode?: string
       firstName?: string
       lastName?: string
       email?: string

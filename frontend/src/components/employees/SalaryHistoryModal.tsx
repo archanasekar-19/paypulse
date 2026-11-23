@@ -226,7 +226,7 @@ export const SalaryHistoryModal: React.FC<SalaryHistoryModalProps> = ({
             </Box>
 
             <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.74rem' }}>
-              {employee.jobTitle} • {employee.email} • ID: {employee.id.slice(0, 8)}
+              {employee.employeeCode ? `${employee.employeeCode} • ` : ''}{employee.jobTitle} • {employee.email}
             </Typography>
           </Box>
         </Box>

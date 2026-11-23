@@ -59,6 +59,7 @@ export class EmployeeController {
   async createEmployee(req: Request, res: Response) {
     try {
       const {
+        employeeCode,
         firstName,
         lastName,
         email,
@@ -85,6 +86,7 @@ export class EmployeeController {
       }
 
       const created = await employeeService.createEmployee({
+        employeeCode,
         firstName,
         lastName,
         email,
@@ -122,6 +124,7 @@ export class EmployeeController {
     try {
       const id = Array.isArray(req.params.id) ? req.params.id[0]! : (req.params.id as string)
       const {
+        employeeCode,
         firstName,
         lastName,
         email,
@@ -146,6 +149,7 @@ export class EmployeeController {
       }
 
       const updated = await employeeService.updateEmployee(id, {
+        employeeCode,
         firstName,
         lastName,
         email,

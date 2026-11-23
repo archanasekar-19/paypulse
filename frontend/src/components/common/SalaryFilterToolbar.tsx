@@ -140,7 +140,7 @@ export const SalaryFilterToolbar: React.FC<SalaryFilterToolbarProps> = ({
           {/* 1. Search Box */}
           <TextField
             size="small"
-            placeholder="Search employee, title, or email..."
+            placeholder="Search by code (e.g. ACM-01527), name, title, or email..."
             value={searchInput}
             onChange={(e) => onSearchInputChange(e.target.value)}
             onKeyDown={handleKeyDown}

@@ -61,6 +61,7 @@ export const createEmployeeAsync = createAsyncThunk(
   'employees/createEmployeeAsync',
   async (
     payload: {
+      employeeCode?: string
       firstName: string
       lastName: string
       email: string
@@ -90,6 +91,7 @@ export const updateEmployeeAsync = createAsyncThunk(
     }: {
       id: string
       data: {
+        employeeCode?: string
         firstName?: string
         lastName?: string
         email?: string

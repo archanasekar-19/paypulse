@@ -19,6 +19,7 @@ export interface CustomSalaryItem {
 }
 
 export interface CreateEmployeeInput {
+  employeeCode?: string
   firstName: string
   lastName: string
   email: string
@@ -39,6 +40,7 @@ export interface CreateEmployeeInput {
 }
 
 export interface UpdateEmployeeInput {
+  employeeCode?: string
   firstName?: string
   lastName?: string
   email?: string
@@ -112,6 +114,7 @@ export class EmployeeService {
     if (search && search.trim() !== '') {
       const query = search.trim()
       const searchConditions: Prisma.EmployeeWhereInput[] = [
+        { employeeCode: { contains: query } },
         { firstName: { contains: query } },
         { lastName: { contains: query } },
         { email: { contains: query } },
@@ -225,7 +228,8 @@ export class EmployeeService {
    */
   async createEmployee(input: CreateEmployeeInput) {
     const totalCount = await prisma.employee.count()
-    const employeeCode = `ACM-${String(totalCount + 1).padStart(5, '0')}`
+    const autoCode = `ACM-${String(totalCount + 1).padStart(5, '0')}`
+    const employeeCode = input.employeeCode?.trim() ? input.employeeCode.trim() : autoCode
 
     const currency = COUNTRY_CURRENCY_MAP[input.country] || 'USD'
     const fxRate = FX_RATES_TO_USD[currency] || 1.0
@@ -363,6 +367,7 @@ export class EmployeeService {
     return prisma.employee.update({
       where: { id },
       data: {
+        employeeCode: input.employeeCode !== undefined && input.employeeCode.trim() ? input.employeeCode.trim() : undefined,
         firstName: input.firstName !== undefined ? input.firstName.trim() : undefined,
         lastName: input.lastName !== undefined ? input.lastName.trim() : undefined,
         email: input.email !== undefined ? input.email.trim().toLowerCase() : undefined,

@@ -8,6 +8,7 @@ export interface CustomSalaryItem {
 
 export interface Employee {
   id: string
+  employeeCode?: string
   name: string
   firstName?: string
   lastName?: string
@@ -38,6 +39,7 @@ export interface Employee {
 }
 
 export interface EmployeeFormData {
+  employeeCode?: string
   firstName: string
   lastName: string
   email: string
