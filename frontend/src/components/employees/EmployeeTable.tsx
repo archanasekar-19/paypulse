@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 import {
   Paper,
   Box,
@@ -12,8 +12,12 @@ import {
   TablePagination,
   TableSortLabel,
   Avatar,
-  LinearProgress
+  IconButton,
+  Tooltip,
+  LinearProgress,
+  CircularProgress
 } from '@mui/material'
+import { Icon } from '@iconify/react'
 import type { Employee } from '../../types'
 import { formatCurrency, getInitials } from '../../utils/formatters'
 import { getDepartmentStyle } from '../../constants/departments'
@@ -29,6 +33,8 @@ interface EmployeeTableProps {
   onPageChange: (newPage: number) => void
   onPageSizeChange: (newPageSize: number) => void
   onSortChange: (column: 'salary' | 'name' | 'department' | 'country' | 'hireDate') => void
+  onEditEmployee: (employee: Employee) => void
+  onDeleteEmployee: (employee: Employee) => void
 }
 
 export const EmployeeTable: React.FC<EmployeeTableProps> = ({
@@ -41,7 +47,9 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
   isLoading = false,
   onPageChange,
   onPageSizeChange,
-  onSortChange
+  onSortChange,
+  onEditEmployee,
+  onDeleteEmployee
 }) => {
   return (
     <Paper elevation={0} sx={{ overflow: 'hidden', border: '1px solid #e2e8f0' }}>
@@ -57,7 +65,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
         }}
       >
         <Box>
-          <Typography variant="h6" fontWeight={700}>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
             Employee Salary Roster
           </Typography>
           <Typography variant="caption" color="text.secondary">
@@ -69,8 +77,37 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
       {/* Loading Indicator */}
       {isLoading && <LinearProgress sx={{ height: 3 }} />}
 
-      {/* Table Container */}
-      <TableContainer>
+      {/* Table Container with Loading Overlay */}
+      <TableContainer sx={{ position: 'relative', minHeight: 340 }}>
+        {/* Semi-transparent Loading Overlay during page change, sort, filter, or CRUD refresh */}
+        {isLoading && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(255, 255, 255, 0.72)',
+              zIndex: 5,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1.5,
+              backdropFilter: 'blur(1px)'
+            }}
+          >
+            <CircularProgress size={38} thickness={4} color="primary" />
+            <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+              Fetching employee records...
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Querying live database
+            </Typography>
+          </Box>
+        )}
+
         <Table>
           <TableHead>
             <TableRow>
@@ -120,6 +157,11 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                   Base Salary
                 </TableSortLabel>
               </TableCell>
+
+              {/* Actions Column */}
+              <TableCell align="center" sx={{ width: 100 }}>
+                Actions
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -154,7 +196,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                           {initials}
                         </Avatar>
                         <Box>
-                          <Typography variant="subtitle2" fontWeight={600} color="text.primary">
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }} color="text.primary">
                             {emp.name}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
@@ -200,19 +242,62 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
 
                     {/* Salary */}
                     <TableCell align="right">
-                      <Typography variant="subtitle2" fontWeight={700} color="text.primary">
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }} color="text.primary">
                         {formatCurrency(emp.salary, emp.currency)}
                       </Typography>
+                    </TableCell>
+
+                    {/* Actions: Edit & Delete */}
+                    <TableCell align="center">
+                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                        <Tooltip title="Update Salary">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => onEditEmployee(emp)}
+                            sx={{
+                              backgroundColor: '#eff6ff',
+                              '&:hover': { backgroundColor: '#dbeafe' }
+                            }}
+                          >
+                            <Icon icon="solar:pen-linear" width="16" height="16" />
+                          </IconButton>
+                        </Tooltip>
+
+                        <Tooltip title="Remove Employee">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => onDeleteEmployee(emp)}
+                            sx={{
+                              backgroundColor: '#fee2e2',
+                              color: '#dc2626',
+                              '&:hover': { backgroundColor: '#fecaca' }
+                            }}
+                          >
+                            <Icon icon="solar:trash-bin-trash-linear" width="16" height="16" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 )
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    {isLoading ? 'Loading employee records from database...' : 'No employees found matching the search criteria.'}
-                  </Typography>
+                <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                  {isLoading ? (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
+                      <CircularProgress size={36} color="primary" />
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                        Loading employee records from database...
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No employees found matching the search criteria.
+                    </Typography>
+                  )}
                 </TableCell>
               </TableRow>
             )}

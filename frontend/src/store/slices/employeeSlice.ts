@@ -32,7 +32,7 @@ const initialState: EmployeeState = {
   error: null
 }
 
-// Async Thunk: Fetch paginated, filtered employees from Backend API
+// Async Thunk: Fetch paginated, filtered employees
 export const fetchEmployees = createAsyncThunk(
   'employees/fetchEmployees',
   async (
@@ -52,6 +52,89 @@ export const fetchEmployees = createAsyncThunk(
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch employees')
+    }
+  }
+)
+
+// Async Thunk: Create new employee
+export const createEmployeeAsync = createAsyncThunk(
+  'employees/createEmployeeAsync',
+  async (
+    payload: {
+      firstName: string
+      lastName: string
+      email: string
+      department: string
+      country: string
+      jobTitle: string
+      baseSalary: number
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await api.post('/employees', payload)
+      return response.data.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to create employee')
+    }
+  }
+)
+
+// Async Thunk: Update full employee record
+export const updateEmployeeAsync = createAsyncThunk(
+  'employees/updateEmployeeAsync',
+  async (
+    {
+      id,
+      data
+    }: {
+      id: string
+      data: {
+        firstName: string
+        lastName: string
+        email: string
+        department: string
+        country: string
+        jobTitle: string
+        baseSalary: number
+      }
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await api.put(`/employees/${id}`, data)
+      return { id, updated: response.data.data }
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to update employee')
+    }
+  }
+)
+
+// Async Thunk: Update employee salary
+export const updateSalaryAsync = createAsyncThunk(
+  'employees/updateSalaryAsync',
+  async (
+    { id, salary }: { id: string; salary: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await api.put(`/employees/${id}/salary`, { salary })
+      return { id, updated: response.data.data }
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to update salary')
+    }
+  }
+)
+
+// Async Thunk: Delete employee
+export const deleteEmployeeAsync = createAsyncThunk(
+  'employees/deleteEmployeeAsync',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await api.delete(`/employees/${id}`)
+      return id
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to delete employee')
     }
   }
 )
@@ -88,6 +171,7 @@ export const employeeSlice = createSlice({
     }
   },
   extraReducers: (builder) => {
+    // fetchEmployees
     builder
       .addCase(fetchEmployees.pending, (state) => {
         state.isLoading = true
@@ -99,6 +183,95 @@ export const employeeSlice = createSlice({
         state.totalRecords = action.payload.pagination.totalRecords
       })
       .addCase(fetchEmployees.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
+      })
+
+    // createEmployeeAsync
+    builder
+      .addCase(createEmployeeAsync.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(createEmployeeAsync.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.totalRecords += 1
+        state.items.unshift({
+          id: action.payload.id,
+          name: `${action.payload.firstName} ${action.payload.lastName}`,
+          email: action.payload.email,
+          department: action.payload.department,
+          country: action.payload.country,
+          jobTitle: action.payload.jobTitle,
+          salary: action.payload.baseSalary,
+          currency: action.payload.currency
+        })
+      })
+      .addCase(createEmployeeAsync.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
+      })
+
+    // updateEmployeeAsync
+    builder
+      .addCase(updateEmployeeAsync.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(updateEmployeeAsync.fulfilled, (state, action) => {
+        state.isLoading = false
+        const index = state.items.findIndex((e) => e.id === action.payload.id)
+        if (index !== -1) {
+          const updated = action.payload.updated
+          state.items[index] = {
+            id: updated.id,
+            name: `${updated.firstName} ${updated.lastName}`,
+            firstName: updated.firstName,
+            lastName: updated.lastName,
+            email: updated.email,
+            department: updated.department,
+            country: updated.country,
+            jobTitle: updated.jobTitle,
+            salary: updated.baseSalary,
+            currency: updated.currency
+          }
+        }
+      })
+      .addCase(updateEmployeeAsync.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
+      })
+
+    // updateSalaryAsync
+    builder
+      .addCase(updateSalaryAsync.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(updateSalaryAsync.fulfilled, (state, action) => {
+        state.isLoading = false
+        const index = state.items.findIndex((e) => e.id === action.payload.id)
+        if (index !== -1) {
+          state.items[index].salary = action.payload.updated.baseSalary
+        }
+      })
+      .addCase(updateSalaryAsync.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
+      })
+
+    // deleteEmployeeAsync
+    builder
+      .addCase(deleteEmployeeAsync.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(deleteEmployeeAsync.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.items = state.items.filter((e) => e.id !== action.payload)
+        state.totalRecords = Math.max(0, state.totalRecords - 1)
+      })
+      .addCase(deleteEmployeeAsync.rejected, (state, action) => {
         state.isLoading = false
         state.error = action.payload as string
       })

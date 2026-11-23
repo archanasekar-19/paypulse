@@ -43,7 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Icon icon="solar:wallet-money-bold-duotone" width="26" height="26" />
           </Box>
           <Box>
-            <Typography variant="h6" fontWeight="bold" sx={{ lineHeight: 1.2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
               PayPulse
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -82,7 +82,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               EV
             </Avatar>
             <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-              <Typography variant="subtitle2" fontWeight={600} sx={{ lineHeight: 1.2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
                 {userName}
               </Typography>
               <Typography variant="caption" color="text.secondary">

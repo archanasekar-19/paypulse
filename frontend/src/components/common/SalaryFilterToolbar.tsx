@@ -20,13 +20,14 @@ export interface SalaryFilterToolbarProps {
   searchInput: string
   onSearchInputChange: (value: string) => void
   onSearch: () => void
-  appliedSearch: string
+  appliedSearch?: string
   selectedDepartment: string
   onDepartmentChange: (department: string) => void
   selectedCountry: string
   onCountryChange: (country: string) => void
   totalCount: number
   onResetFilters: () => void
+  onOpenAddEmployee?: () => void
   departments?: readonly string[]
   countries?: readonly string[]
 }
@@ -35,12 +36,14 @@ export const SalaryFilterToolbar: React.FC<SalaryFilterToolbarProps> = ({
   searchInput,
   onSearchInputChange,
   onSearch,
+  appliedSearch: _appliedSearch,
   selectedDepartment,
   onDepartmentChange,
   selectedCountry,
   onCountryChange,
   totalCount,
   onResetFilters,
+  onOpenAddEmployee,
   departments = DEPARTMENTS,
   countries = COUNTRIES
 }) => {
@@ -85,19 +88,21 @@ export const SalaryFilterToolbar: React.FC<SalaryFilterToolbarProps> = ({
           onChange={(e) => onSearchInputChange(e.target.value)}
           onKeyDown={handleKeyDown}
           sx={{ minWidth: { xs: '100%', sm: 260 }, flex: { sm: 1 } }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Icon icon="solar:magnifer-linear" width="18" height="18" color="#64748b" />
-              </InputAdornment>
-            ),
-            endAdornment: searchInput ? (
-              <InputAdornment position="end">
-                <IconButton size="small" onClick={() => onSearchInputChange('')}>
-                  <Icon icon="solar:close-circle-linear" width="16" height="16" />
-                </IconButton>
-              </InputAdornment>
-            ) : null
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Icon icon="solar:magnifer-linear" width="18" height="18" color="#64748b" />
+                </InputAdornment>
+              ),
+              endAdornment: searchInput ? (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={() => onSearchInputChange('')}>
+                    <Icon icon="solar:close-circle-linear" width="16" height="16" />
+                  </IconButton>
+                </InputAdornment>
+              ) : null
+            }
           }}
         />
 
@@ -169,21 +174,43 @@ export const SalaryFilterToolbar: React.FC<SalaryFilterToolbarProps> = ({
         </Button>
       </Box>
 
-      {/* Right: Results Count */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: { xs: 'flex-start', lg: 'flex-end' } }}>
-        <Typography variant="caption" color="text.secondary" fontWeight={500}>
-          Total Records:
-        </Typography>
-        <Chip
-          label={totalCount.toLocaleString()}
-          size="small"
-          sx={{
-            fontWeight: 700,
-            backgroundColor: '#f1f5f9',
-            color: '#0f172a',
-            fontSize: '0.75rem'
-          }}
-        />
+      {/* Right: Add Employee Action & Results Count */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: { xs: 'flex-start', lg: 'flex-end' } }}>
+        {onOpenAddEmployee && (
+          <Button
+            variant="contained"
+            color="success"
+            onClick={onOpenAddEmployee}
+            sx={{
+              height: 40,
+              px: 2,
+              fontWeight: 600,
+              textTransform: 'none',
+              boxShadow: 'none',
+              backgroundColor: '#16a34a',
+              '&:hover': { backgroundColor: '#15803d' }
+            }}
+            startIcon={<Icon icon="solar:user-plus-bold" width="18" height="18" />}
+          >
+            Add Employee
+          </Button>
+        )}
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+            Total:
+          </Typography>
+          <Chip
+            label={totalCount.toLocaleString()}
+            size="small"
+            sx={{
+              fontWeight: 700,
+              backgroundColor: '#f1f5f9',
+              color: '#0f172a',
+              fontSize: '0.75rem'
+            }}
+          />
+        </Box>
       </Box>
     </Paper>
   )

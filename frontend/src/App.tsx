@@ -1,13 +1,15 @@
-import React from 'react'
+import { useState } from 'react'
 import { ThemeProvider, CssBaseline, Box, Typography, Alert } from '@mui/material'
 import { theme } from './theme'
 import { Navbar } from './components/layout/Navbar'
 import { SalaryFilterToolbar } from './components/common/SalaryFilterToolbar'
 import { EmployeeTable } from './components/employees/EmployeeTable'
+import { AddEmployeeModal } from './components/employees/AddEmployeeModal'
+import { DeleteConfirmDialog } from './components/employees/DeleteConfirmDialog'
 import { useEmployees } from './hooks/useEmployees'
+import type { Employee, EmployeeFormData } from './types'
 
 export default function App() {
-  // Consume all employee list state, pagination, and actions from the custom hook
   const {
     employees,
     totalRecords,
@@ -28,8 +30,46 @@ export default function App() {
     handleResetFilters,
     sortBy,
     sortOrder,
-    handleSortChange
+    handleSortChange,
+    createEmployee,
+    updateEmployee,
+    deleteEmployee
   } = useEmployees()
+
+  // Modal & Dialog state
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
+  const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [notification, setNotification] = useState<{ message: string; severity: 'success' | 'error' } | null>(null)
+
+  const showNotification = (message: string, severity: 'success' | 'error' = 'success') => {
+    setNotification({ message, severity })
+    setTimeout(() => setNotification(null), 3500)
+  }
+
+  // Unified Save Handler (Add & Edit)
+  const handleSaveEmployee = async (employeeData: EmployeeFormData) => {
+    if (editingEmployee) {
+      await updateEmployee(editingEmployee.id, employeeData)
+      showNotification('Employee record updated successfully!')
+    } else {
+      await createEmployee(employeeData)
+      showNotification('New employee onboarded successfully!')
+    }
+  }
+
+  // Delete
+  const handleConfirmDelete = async (id: string) => {
+    await deleteEmployee(id)
+    showNotification('Employee removed successfully from roster!')
+  }
+
+  const isEmployeeModalOpen = isAddModalOpen || Boolean(editingEmployee)
+
+  const handleCloseEmployeeModal = () => {
+    setIsAddModalOpen(false)
+    setEditingEmployee(null)
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -43,24 +83,33 @@ export default function App() {
         <Box sx={{ flex: 1, py: 4, px: { xs: 2, sm: 4, md: 6 } }}>
           {/* Page Title */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h4" fontWeight={800} gutterBottom>
+            <Typography variant="h4" sx={{ fontWeight: 800 }} gutterBottom>
               Employee Salary Management
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Direct server-side search, filtering, and pagination across 10,000 employees
+              Enterprise CRUD operations, server-side search, filtering, and pagination over 10,000 employees
             </Typography>
           </Box>
 
-          {/* Executive KPI Metric Cards (Phase 2 - Analytics) */}
-          {/* <KpiCards metrics={metrics} /> */}
+          {/* Toast Notification */}
+          {notification && (
+            <Alert
+              severity={notification.severity}
+              sx={{ mb: 3 }}
+              onClose={() => setNotification(null)}
+            >
+              {notification.message}
+            </Alert>
+          )}
 
+          {/* Backend Error Alert */}
           {error && (
             <Alert severity="warning" sx={{ mb: 3 }}>
               {error} (Ensure backend server is running on http://localhost:4000)
             </Alert>
           )}
 
-          {/* Standalone Reusable Filter Toolbar (Reusable for Analytics & Table) */}
+          {/* Standalone Reusable Filter Toolbar with Add Employee Action */}
           <SalaryFilterToolbar
             searchInput={searchInput}
             onSearchInputChange={setSearchInput}
@@ -72,9 +121,10 @@ export default function App() {
             onCountryChange={handleCountryChange}
             totalCount={totalRecords}
             onResetFilters={handleResetFilters}
+            onOpenAddEmployee={() => setIsAddModalOpen(true)}
           />
 
-          {/* High-Performance Paginated Employee Table */}
+          {/* High-Performance Paginated Employee Table with Edit & Delete Actions */}
           <EmployeeTable
             employees={employees}
             totalRecords={totalRecords}
@@ -86,6 +136,24 @@ export default function App() {
             onPageChange={setPage}
             onPageSizeChange={setPageSize}
             onSortChange={handleSortChange}
+            onEditEmployee={(emp) => setEditingEmployee(emp)}
+            onDeleteEmployee={(emp) => setDeletingEmployee(emp)}
+          />
+
+          {/* Unified Symmetrical Employee Dialog (Reused for Add & Edit with populated data) */}
+          <AddEmployeeModal
+            open={isEmployeeModalOpen}
+            employee={editingEmployee}
+            onClose={handleCloseEmployeeModal}
+            onSubmit={handleSaveEmployee}
+          />
+
+          {/* Delete Confirmation Popup Dialog (Delete) */}
+          <DeleteConfirmDialog
+            open={Boolean(deletingEmployee)}
+            employee={deletingEmployee}
+            onClose={() => setDeletingEmployee(null)}
+            onConfirm={handleConfirmDelete}
           />
         </Box>
       </Box>
