@@ -105,6 +105,8 @@ export const updateEmployeeAsync = createAsyncThunk(
         leaveDays?: number
         insurance?: number
         leaveDeduction?: number
+        customAdditions?: any[]
+        customDeductions?: any[]
       }
     },
     { rejectWithValue }
@@ -251,6 +253,8 @@ export const employeeSlice = createSlice({
             leaveDays: updated.leaveDays,
             insurance: updated.insurance,
             leaveDeduction: updated.leaveDeduction,
+            customAdditions: updated.customAdditions ? (typeof updated.customAdditions === 'string' ? JSON.parse(updated.customAdditions) : updated.customAdditions) : [],
+            customDeductions: updated.customDeductions ? (typeof updated.customDeductions === 'string' ? JSON.parse(updated.customDeductions) : updated.customDeductions) : [],
             netSalary: updated.netSalary,
             netSalaryUSD: updated.netSalaryUSD,
             currency: updated.currency

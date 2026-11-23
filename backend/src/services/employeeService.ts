@@ -11,6 +11,12 @@ export interface GetEmployeesParams {
   sortOrder?: 'asc' | 'desc'
 }
 
+export interface CustomSalaryItem {
+  id: string
+  name: string
+  amount: number
+}
+
 export interface CreateEmployeeInput {
   firstName: string
   lastName: string
@@ -27,6 +33,8 @@ export interface CreateEmployeeInput {
   leaveDays?: number
   insurance?: number
   leaveDeduction?: number
+  customAdditions?: CustomSalaryItem[] | string
+  customDeductions?: CustomSalaryItem[] | string
 }
 
 export interface UpdateEmployeeInput {
@@ -45,6 +53,8 @@ export interface UpdateEmployeeInput {
   leaveDays?: number
   insurance?: number
   leaveDeduction?: number
+  customAdditions?: CustomSalaryItem[] | string
+  customDeductions?: CustomSalaryItem[] | string
 }
 
 // Exchange rates normalized to base USD
@@ -70,13 +80,15 @@ const COUNTRY_CURRENCY_MAP: Record<string, string> = {
 
 export class EmployeeService {
   /**
-   * Fetches paginated, filtered, and sorted employee records directly from database
+   * Helper to build Prisma WHERE and ORDER BY filters for both pagination and CSV export
    */
-  async getEmployees(params: GetEmployeesParams) {
-    const page = Math.max(1, Number(params.page) || 1)
-    const limit = Math.min(100, Math.max(1, Number(params.limit) || 25))
-    const skip = (page - 1) * limit
-
+  private buildFilterQuery(params: {
+    search?: string
+    department?: string
+    country?: string
+    sortBy?: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'netSalary'
+    sortOrder?: 'asc' | 'desc'
+  }) {
     const { search, department, country, sortBy = 'salary', sortOrder = 'desc' } = params
 
     // Build Prisma WHERE filter condition
@@ -113,6 +125,19 @@ export class EmployeeService {
       orderBy = { netSalaryUSD: sortOrder }
     }
 
+    return { where, orderBy }
+  }
+
+  /**
+   * Fetches paginated, filtered, and sorted employee records directly from database
+   */
+  async getEmployees(params: GetEmployeesParams) {
+    const page = Math.max(1, Number(params.page) || 1)
+    const limit = Math.min(100, Math.max(1, Number(params.limit) || 25))
+    const skip = (page - 1) * limit
+
+    const { where, orderBy } = this.buildFilterQuery(params)
+
     const [totalRecords, employees] = await Promise.all([
       prisma.employee.count({ where }),
       prisma.employee.findMany({
@@ -146,6 +171,8 @@ export class EmployeeService {
       leaveDays: emp.leaveDays,
       insurance: emp.insurance,
       leaveDeduction: emp.leaveDeduction,
+      customAdditions: emp.customAdditions ? JSON.parse(emp.customAdditions) : [],
+      customDeductions: emp.customDeductions ? JSON.parse(emp.customDeductions) : [],
       netSalary: emp.netSalary,
       netSalaryUSD: emp.netSalaryUSD,
       currency: emp.currency,
@@ -243,7 +270,26 @@ export class EmployeeService {
     const subsidy = input.subsidy !== undefined ? input.subsidy : employee.subsidy
     const allowance = input.allowance !== undefined ? input.allowance : employee.allowance
     const overtimePay = input.overtimePay !== undefined ? input.overtimePay : employee.overtimePay
-    const grossSalary = baseSalary + bonus + subsidy + allowance + overtimePay
+
+    // Handle Custom Additions
+    let customAdditions = employee.customAdditions
+    let customAdditionsTotal = 0
+    if (input.customAdditions !== undefined) {
+      const parsedAdditions: CustomSalaryItem[] = typeof input.customAdditions === 'string'
+        ? JSON.parse(input.customAdditions)
+        : input.customAdditions
+      customAdditions = JSON.stringify(parsedAdditions)
+      customAdditionsTotal = parsedAdditions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0)
+    } else if (employee.customAdditions) {
+      try {
+        const parsed = JSON.parse(employee.customAdditions)
+        customAdditionsTotal = parsed.reduce((acc: number, curr: any) => acc + (Number(curr.amount) || 0), 0)
+      } catch {
+        customAdditionsTotal = 0
+      }
+    }
+
+    const grossSalary = baseSalary + bonus + subsidy + allowance + overtimePay + customAdditionsTotal
 
     const insurance = input.insurance !== undefined ? input.insurance : employee.insurance
     const earnedLeaves = input.earnedLeaves !== undefined ? input.earnedLeaves : employee.earnedLeaves
@@ -252,7 +298,25 @@ export class EmployeeService {
     const dailyWage = baseSalary / 260
     const leaveDeduction = input.leaveDeduction !== undefined ? input.leaveDeduction : Math.round(unpaidDays * dailyWage)
 
-    const netSalary = grossSalary - (insurance + leaveDeduction)
+    // Handle Custom Deductions
+    let customDeductions = employee.customDeductions
+    let customDeductionsTotal = 0
+    if (input.customDeductions !== undefined) {
+      const parsedDeductions: CustomSalaryItem[] = typeof input.customDeductions === 'string'
+        ? JSON.parse(input.customDeductions)
+        : input.customDeductions
+      customDeductions = JSON.stringify(parsedDeductions)
+      customDeductionsTotal = parsedDeductions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0)
+    } else if (employee.customDeductions) {
+      try {
+        const parsed = JSON.parse(employee.customDeductions)
+        customDeductionsTotal = parsed.reduce((acc: number, curr: any) => acc + (Number(curr.amount) || 0), 0)
+      } catch {
+        customDeductionsTotal = 0
+      }
+    }
+
+    const netSalary = grossSalary - (insurance + leaveDeduction + customDeductionsTotal)
     const netSalaryUSD = Math.round(netSalary * fxRate)
 
     return prisma.employee.update({
@@ -276,6 +340,8 @@ export class EmployeeService {
         leaveDays,
         insurance,
         leaveDeduction,
+        customAdditions,
+        customDeductions,
         netSalary,
         netSalaryUSD
       }
@@ -323,6 +389,83 @@ export class EmployeeService {
     return prisma.employee.delete({
       where: { id }
     })
+  }
+
+  /**
+   * Generates an RFC-4180 compliant CSV string of filtered employee payroll records
+   */
+  async exportEmployeesToCSV(params: {
+    search?: string
+    department?: string
+    country?: string
+    sortBy?: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'netSalary'
+    sortOrder?: 'asc' | 'desc'
+  }): Promise<string> {
+    const { where, orderBy } = this.buildFilterQuery(params)
+
+    const employees = await prisma.employee.findMany({
+      where,
+      orderBy
+    })
+
+    const headers = [
+      'Employee Code',
+      'First Name',
+      'Last Name',
+      'Email',
+      'Department',
+      'Country',
+      'Job Title',
+      'Currency',
+      'Base Salary',
+      'Bonus',
+      'Subsidy',
+      'Allowance',
+      'Overtime Pay',
+      'Gross Salary',
+      'Earned Leaves',
+      'Leave Days Taken',
+      'Leave Deduction',
+      'Insurance',
+      'Net Take-Home Pay',
+      'Net Salary (USD)'
+    ]
+
+    const escapeCSV = (val: unknown): string => {
+      if (val === null || val === undefined) return ''
+      const str = String(val)
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return `"${str.replace(/"/g, '""')}"`
+      }
+      return str
+    }
+
+    const rows = employees.map((emp) =>
+      [
+        escapeCSV(emp.employeeCode),
+        escapeCSV(emp.firstName),
+        escapeCSV(emp.lastName),
+        escapeCSV(emp.email),
+        escapeCSV(emp.department),
+        escapeCSV(emp.country),
+        escapeCSV(emp.jobTitle),
+        escapeCSV(emp.currency),
+        emp.baseSalary,
+        emp.bonus,
+        emp.subsidy,
+        emp.allowance,
+        emp.overtimePay,
+        emp.grossSalary,
+        emp.earnedLeaves,
+        emp.leaveDays,
+        emp.leaveDeduction,
+        emp.insurance,
+        emp.netSalary,
+        emp.netSalaryUSD
+      ].join(',')
+    )
+
+    return [headers.join(','), ...rows].join('\r\n')
   }
 }
 

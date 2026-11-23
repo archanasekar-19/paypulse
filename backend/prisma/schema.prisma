@@ -35,6 +35,10 @@ model Employee {
   insurance      Float    @default(0)
   leaveDeduction Float    @default(0)
 
+  // Custom Dynamic Additions & Deductions (JSON arrays)
+  customAdditions   String?  @default("[]")
+  customDeductions  String?  @default("[]")
+
   // Net Take-Home Salary
   netSalary     Float    @default(0) // grossSalary - (insurance + leaveDeduction)
   netSalaryUSD  Float    @default(0) // Pre-computed normalized USD net salary

@@ -36,7 +36,9 @@ export default function App() {
     handleSortChange,
     createEmployee,
     updateEmployee,
-    deleteEmployee
+    deleteEmployee,
+    isExporting,
+    exportToCSV
   } = useEmployees()
 
   // Real-time Executive Compensation Analytics
@@ -81,6 +83,16 @@ export default function App() {
     await deleteEmployee(id)
     showNotification('Employee removed successfully from roster!')
     await refreshAnalytics()
+  }
+
+  // Export filtered payroll roster
+  const handleExportCSV = async () => {
+    try {
+      await exportToCSV()
+      showNotification('Payroll roster exported successfully to CSV!')
+    } catch {
+      showNotification('Failed to export payroll records to CSV', 'error')
+    }
   }
 
   const isEmployeeModalOpen = isAddModalOpen || Boolean(editingEmployee)
@@ -131,7 +143,7 @@ export default function App() {
           {/* Executive Macro KPI Cards (Total Payroll, Headcount, Average, Median) */}
           <KpiCards metrics={metrics} isLoading={isAnalyticsLoading} />
 
-          {/* Standalone Reusable Filter Toolbar with Add Employee Action */}
+          {/* Standalone Reusable Filter Toolbar with Add Employee & Export CSV Actions */}
           <SalaryFilterToolbar
             searchInput={searchInput}
             onSearchInputChange={setSearchInput}
@@ -144,6 +156,8 @@ export default function App() {
             totalCount={totalRecords}
             onResetFilters={handleResetFilters}
             onOpenAddEmployee={() => setIsAddModalOpen(true)}
+            onExportCSV={handleExportCSV}
+            isExporting={isExporting}
           />
 
           {/* High-Performance Paginated Employee Table with Edit & Delete Actions */}

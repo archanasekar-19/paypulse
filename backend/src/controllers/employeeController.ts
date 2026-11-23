@@ -27,6 +27,31 @@ export class EmployeeController {
   }
 
   /**
+   * GET /api/employees/export (Export CSV of filtered employees)
+   */
+  async exportEmployees(req: Request, res: Response) {
+    try {
+      const { search, department, country, sortBy, sortOrder } = req.query
+
+      const csvContent = await employeeService.exportEmployeesToCSV({
+        search: search ? String(search) : undefined,
+        department: department ? String(department) : undefined,
+        country: country ? String(country) : undefined,
+        sortBy: sortBy as any,
+        sortOrder: sortOrder as any
+      })
+
+      const dateStr = new Date().toISOString().slice(0, 10)
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+      res.setHeader('Content-Disposition', `attachment; filename="paypulse_payroll_${dateStr}.csv"`)
+      return res.status(200).send(csvContent)
+    } catch (error) {
+      console.error('Error exporting payroll to CSV:', error)
+      return res.status(500).json({ error: 'Failed to export payroll records to CSV' })
+    }
+  }
+
+  /**
    * POST /api/employees (Create Employee)
    */
   async createEmployee(req: Request, res: Response) {
@@ -109,7 +134,9 @@ export class EmployeeController {
         earnedLeaves,
         leaveDays,
         insurance,
-        leaveDeduction
+        leaveDeduction,
+        customAdditions,
+        customDeductions
       } = req.body
 
       if (baseSalary !== undefined && (typeof baseSalary !== 'number' || baseSalary <= 0)) {
@@ -131,7 +158,9 @@ export class EmployeeController {
         earnedLeaves,
         leaveDays,
         insurance,
-        leaveDeduction
+        leaveDeduction,
+        customAdditions,
+        customDeductions
       })
 
       return res.status(200).json({

@@ -16,6 +16,9 @@ export const AppIcon = {
   CLOSE: 'solar:close-circle-linear',
   SAVE: 'solar:diskette-bold',
   CHECK: 'solar:check-circle-bold',
+  PLUS: 'solar:add-circle-bold',
+  TRASH: 'solar:trash-bin-trash-bold-duotone',
+  EXPORT: 'solar:download-minimalistic-bold-duotone',
 
   // Modules & KPIs
   PAYROLL: 'solar:wallet-money-bold-duotone',

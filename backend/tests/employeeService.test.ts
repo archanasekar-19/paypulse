@@ -111,6 +111,31 @@ describe('EmployeeService & Server-Side Filtering (10,000 Employees)', () => {
     await employeeService.deleteEmployee(created.id)
     await expect(employeeService.deleteEmployee(created.id)).rejects.toThrow('Employee not found')
   })
+
+  it('should export filtered employee payroll records into RFC-4180 CSV format', async () => {
+    const csvData = await employeeService.exportEmployeesToCSV({
+      department: 'Engineering',
+      country: 'India'
+    })
+
+    expect(typeof csvData).toBe('string')
+    const lines = csvData.split('\r\n')
+    expect(lines.length).toBeGreaterThan(10)
+
+    // Verify CSV Header Row
+    const header = lines[0]
+    expect(header).toContain('Employee Code')
+    expect(header).toContain('Gross Salary')
+    expect(header).toContain('Leave Deduction')
+    expect(header).toContain('Net Take-Home Pay')
+    expect(header).toContain('Net Salary (USD)')
+
+    // Verify first data line has correct currency and department
+    const firstRow = lines[1]
+    expect(firstRow).toContain('Engineering')
+    expect(firstRow).toContain('India')
+    expect(firstRow).toContain('INR')
+  })
 })
 
 describe('AnalyticsService (Macro KPIs over 10,000 Records)', () => {

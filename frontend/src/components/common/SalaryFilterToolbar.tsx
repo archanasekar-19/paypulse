@@ -29,6 +29,8 @@ export interface SalaryFilterToolbarProps {
   totalCount: number
   onResetFilters: () => void
   onOpenAddEmployee?: () => void
+  onExportCSV?: () => void
+  isExporting?: boolean
   departments?: readonly string[]
   countries?: readonly string[]
 }
@@ -45,6 +47,8 @@ export const SalaryFilterToolbar: React.FC<SalaryFilterToolbarProps> = ({
   totalCount,
   onResetFilters,
   onOpenAddEmployee,
+  onExportCSV,
+  isExporting = false,
   departments = DEPARTMENTS,
   countries = COUNTRIES
 }) => {
@@ -232,8 +236,29 @@ export const SalaryFilterToolbar: React.FC<SalaryFilterToolbarProps> = ({
           </Button>
         </Box>
 
-        {/* Right: Add Employee Action & Results Count */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, justifyContent: { xs: 'flex-start', lg: 'flex-end' } }}>
+        {/* Right: Export CSV, Add Employee Action & Results Count */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, flexWrap: 'wrap', justifyContent: { xs: 'flex-start', lg: 'flex-end' } }}>
+          {onExportCSV && (
+            <Button
+              variant="outlined"
+              onClick={onExportCSV}
+              disabled={isExporting}
+              sx={{
+                ...buttonSx,
+                borderColor: '#e2e8f0',
+                color: '#1e242e',
+                backgroundColor: '#ffffff',
+                '&:hover': {
+                  borderColor: '#cbd5e1',
+                  backgroundColor: '#f8fafc'
+                }
+              }}
+              startIcon={<Icon icon={AppIcon.EXPORT} width="16" height="16" />}
+            >
+              {isExporting ? 'Exporting...' : 'Export CSV'}
+            </Button>
+          )}
+
           {onOpenAddEmployee && (
             <Button
               variant="contained"

@@ -1,5 +1,11 @@
 export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'INR' | 'JPY' | 'SGD' | 'CAD'
 
+export interface CustomSalaryItem {
+  id: string
+  name: string
+  amount: number
+}
+
 export interface Employee {
   id: string
   name: string
@@ -20,6 +26,8 @@ export interface Employee {
   leaveDays?: number
   insurance?: number
   leaveDeduction?: number
+  customAdditions?: CustomSalaryItem[]
+  customDeductions?: CustomSalaryItem[]
   netSalary?: number
   netSalaryUSD?: number
   currency: CurrencyCode
@@ -45,6 +53,8 @@ export interface CompensationUpdateData {
   leaveDays?: number
   insurance?: number
   leaveDeduction?: number
+  customAdditions?: CustomSalaryItem[]
+  customDeductions?: CustomSalaryItem[]
 }
 
 export interface KpiMetrics {

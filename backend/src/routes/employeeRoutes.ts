@@ -6,6 +6,9 @@ const router = Router()
 // GET /api/employees - Server-side paginated, filtered, searched employee records
 router.get('/', (req, res) => employeeController.getEmployees(req, res))
 
+// GET /api/employees/export - Stream or download CSV of filtered employee payroll
+router.get('/export', (req, res) => employeeController.exportEmployees(req, res))
+
 // POST /api/employees - Create new employee
 router.post('/', (req, res) => employeeController.createEmployee(req, res))
 

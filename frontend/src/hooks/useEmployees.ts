@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { api } from '../services/api'
 import { useAppDispatch, useAppSelector } from '../store'
 import {
   fetchEmployees,
@@ -77,14 +78,18 @@ export const useEmployees = () => {
     setPage(1)
   }
 
-  // Department change: only updates local UI selection without triggering API
+  // Department change: immediately filters table and resets to page 1
   const handleDepartmentChange = (dept: string) => {
     setSelectedDepartment(dept)
+    setAppliedDepartment(dept)
+    setPage(1)
   }
 
-  // Country change: only updates local UI selection without triggering API
+  // Country change: immediately filters table and resets to page 1
   const handleCountryChange = (country: string) => {
     setSelectedCountry(country)
+    setAppliedCountry(country)
+    setPage(1)
   }
 
   // Sorting change
@@ -131,6 +136,8 @@ export const useEmployees = () => {
       leaveDays?: number
       insurance?: number
       leaveDeduction?: number
+      customAdditions?: any[]
+      customDeductions?: any[]
     }
   ) => {
     await dispatch(updateEmployeeAsync({ id, data: payload })).unwrap()
@@ -149,10 +156,49 @@ export const useEmployees = () => {
     await refreshEmployees()
   }
 
+  // Export filtered payroll roster to CSV
+  const [isExporting, setIsExporting] = useState<boolean>(false)
+
+  const exportToCSV = async () => {
+    try {
+      setIsExporting(true)
+      const params = new URLSearchParams()
+      if (appliedSearch.trim()) params.append('search', appliedSearch.trim())
+      if (appliedDepartment !== 'ALL') params.append('department', appliedDepartment)
+      if (appliedCountry !== 'ALL') params.append('country', appliedCountry)
+      if (sortBy) params.append('sortBy', sortBy)
+      if (sortOrder) params.append('sortOrder', sortOrder)
+
+      const response = await api.get(`/employees/export?${params.toString()}`, {
+        responseType: 'blob'
+      })
+
+      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      const dateStr = new Date().toISOString().slice(0, 10)
+      const deptSuffix = appliedDepartment !== 'ALL' ? `_${appliedDepartment}` : ''
+      const countrySuffix = appliedCountry !== 'ALL' ? `_${appliedCountry}` : ''
+      link.setAttribute('download', `PayPulse_Payroll_${dateStr}${deptSuffix}${countrySuffix}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      return true
+    } catch (err) {
+      console.error('Failed to export CSV:', err)
+      throw err
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return {
     employees,
     totalRecords,
     isLoading,
+    isExporting,
     error,
 
     // Pagination
@@ -186,6 +232,7 @@ export const useEmployees = () => {
     updateEmployee,
     updateSalary,
     deleteEmployee,
+    exportToCSV,
 
     // Refresh
     refreshEmployees
