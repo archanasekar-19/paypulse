@@ -1,3 +1,5 @@
+export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'INR' | 'JPY' | 'SGD' | 'CAD'
+
 export interface Employee {
   id: string
   name: string
@@ -6,5 +8,12 @@ export interface Employee {
   country: string
   jobTitle: string
   salary: number
-  currency: string
+  currency: CurrencyCode
+}
+
+export interface KpiMetrics {
+  totalPayrollUSD: number
+  totalEmployees: number
+  averageSalaryUSD: number
+  medianSalaryUSD: number
 }
