@@ -12,7 +12,7 @@ export interface EmployeeState {
   searchQuery: string
   selectedDepartment: string
   selectedCountry: string
-  sortBy: 'salary' | 'name' | 'department' | 'country' | 'hireDate'
+  sortBy: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'updatedAt'
   sortOrder: 'asc' | 'desc'
   isLoading: boolean
   error: string | null
@@ -26,7 +26,7 @@ const initialState: EmployeeState = {
   searchQuery: '',
   selectedDepartment: 'ALL',
   selectedCountry: 'ALL',
-  sortBy: 'salary',
+  sortBy: 'updatedAt',
   sortOrder: 'desc',
   isLoading: false,
   error: null
@@ -244,7 +244,7 @@ export const employeeSlice = createSlice({
         const index = state.items.findIndex((e) => e.id === action.payload.id)
         if (index !== -1) {
           const updated = action.payload.updated
-          state.items[index] = {
+          const updatedItem: Employee = {
             id: updated.id,
             name: `${updated.firstName} ${updated.lastName}`,
             firstName: updated.firstName,
@@ -268,8 +268,13 @@ export const employeeSlice = createSlice({
             customDeductions: updated.customDeductions ? (typeof updated.customDeductions === 'string' ? JSON.parse(updated.customDeductions) : updated.customDeductions) : [],
             netSalary: updated.netSalary,
             netSalaryUSD: updated.netSalaryUSD,
-            currency: updated.currency
+            currency: updated.currency,
+            status: updated.status,
+            updatedAt: updated.updatedAt || new Date().toISOString()
           }
+          // Remove from current position and move to the top
+          state.items.splice(index, 1)
+          state.items.unshift(updatedItem)
         }
       })
       .addCase(updateEmployeeAsync.rejected, (state, action) => {
@@ -287,7 +292,15 @@ export const employeeSlice = createSlice({
         state.isLoading = false
         const index = state.items.findIndex((e) => e.id === action.payload.id)
         if (index !== -1) {
-          state.items[index].salary = action.payload.updated.baseSalary
+          const updated = action.payload.updated
+          state.items[index].salary = updated.baseSalary
+          state.items[index].baseSalary = updated.baseSalary
+          state.items[index].grossSalary = updated.grossSalary
+          state.items[index].netSalary = updated.netSalary
+          state.items[index].netSalaryUSD = updated.netSalaryUSD
+          state.items[index].updatedAt = new Date().toISOString()
+          const [moved] = state.items.splice(index, 1)
+          if (moved) state.items.unshift(moved)
         }
       })
       .addCase(updateSalaryAsync.rejected, (state, action) => {

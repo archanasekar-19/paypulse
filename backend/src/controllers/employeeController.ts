@@ -16,8 +16,8 @@ export class EmployeeController {
         department: department ? String(department) : undefined,
         country: country ? String(country) : undefined,
         status: status ? String(status) : undefined,
-        sortBy: sortBy as any,
-        sortOrder: sortOrder as any
+        sortBy: (sortBy as any) || 'updatedAt',
+        sortOrder: (sortOrder as any) || 'desc'
       })
 
       return res.status(200).json(result)

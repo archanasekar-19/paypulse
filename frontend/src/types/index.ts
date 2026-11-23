@@ -33,6 +33,8 @@ export interface Employee {
   currency: CurrencyCode
   status?: 'ACTIVE' | 'INACTIVE'
   deletedAt?: string | null
+  updatedAt?: string
+  createdAt?: string
 }
 
 export interface EmployeeFormData {

@@ -14,6 +14,7 @@ import {
   Avatar,
   IconButton,
   Tooltip,
+  Chip,
   LinearProgress,
   CircularProgress
 } from '@mui/material'
@@ -28,12 +29,12 @@ interface EmployeeTableProps {
   totalRecords: number
   currentPage: number
   pageSize: number
-  sortBy: 'salary' | 'name' | 'department' | 'country' | 'hireDate'
+  sortBy: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'updatedAt'
   sortOrder: 'asc' | 'desc'
   isLoading?: boolean
   onPageChange: (newPage: number) => void
   onPageSizeChange: (newPageSize: number) => void
-  onSortChange: (column: 'salary' | 'name' | 'department' | 'country' | 'hireDate') => void
+  onSortChange: (column: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'updatedAt') => void
   onViewPaySlip?: (employee: Employee) => void
   onViewHistory?: (employee: Employee) => void
   onEditEmployee: (employee: Employee) => void
@@ -77,6 +78,28 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
           <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.75rem' }}>
             Live compensation records from backend database (10,000 employees)
           </Typography>
+        </Box>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Chip
+            size="small"
+            icon={<Icon icon={AppIcon.TIMELINE} width="14" height="14" />}
+            label={sortBy === 'updatedAt' ? 'Sorted: Latest Activity (Top)' : 'Sort: Latest First'}
+            onClick={() => onSortChange('updatedAt')}
+            sx={{
+              height: 26,
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              borderRadius: '6px',
+              cursor: 'pointer',
+              backgroundColor: sortBy === 'updatedAt' ? '#eff6ff' : '#f8fafc',
+              color: sortBy === 'updatedAt' ? '#2563eb' : '#64748b',
+              border: `1px solid ${sortBy === 'updatedAt' ? '#bfdbfe' : '#e2e8f0'}`,
+              '&:hover': {
+                backgroundColor: sortBy === 'updatedAt' ? '#dbeafe' : '#f1f5f9'
+              }
+            }}
+          />
         </Box>
       </Box>
 

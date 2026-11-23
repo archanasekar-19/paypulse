@@ -36,8 +36,8 @@ export const useEmployees = () => {
   const [selectedCountry, setSelectedCountry] = useState<string>('ALL')
   const [appliedCountry, setAppliedCountry] = useState<string>('ALL')
 
-  // Sorting state
-  const [sortBy, setSortBy] = useState<'salary' | 'name' | 'department' | 'country' | 'hireDate'>('salary')
+  // Sorting state: default to latest updated employee at the top
+  const [sortBy, setSortBy] = useState<'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'updatedAt'>('updatedAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
   // Function to dispatch fetch to backend - ONLY depends on APPLIED filters
@@ -76,6 +76,8 @@ export const useEmployees = () => {
     setAppliedSearch('')
     setAppliedDepartment('ALL')
     setAppliedCountry('ALL')
+    setSortBy('updatedAt')
+    setSortOrder('desc')
     setPage(1)
   }
 
@@ -94,12 +96,12 @@ export const useEmployees = () => {
   }
 
   // Sorting change
-  const handleSortChange = (column: 'salary' | 'name' | 'department' | 'country' | 'hireDate') => {
+  const handleSortChange = (column: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'updatedAt') => {
     if (sortBy === column) {
       setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
     } else {
       setSortBy(column)
-      setSortOrder(column === 'salary' ? 'desc' : 'asc')
+      setSortOrder(column === 'salary' || column === 'updatedAt' ? 'desc' : 'asc')
     }
     setPage(1)
   }
@@ -115,6 +117,9 @@ export const useEmployees = () => {
     baseSalary: number
   }) => {
     await dispatch(createEmployeeAsync(payload)).unwrap()
+    setSortBy('updatedAt')
+    setSortOrder('desc')
+    setPage(1)
     await refreshEmployees()
   }
 
@@ -142,12 +147,18 @@ export const useEmployees = () => {
     }
   ) => {
     await dispatch(updateEmployeeAsync({ id, data: payload })).unwrap()
+    setSortBy('updatedAt')
+    setSortOrder('desc')
+    setPage(1)
     await refreshEmployees()
   }
 
   // Update employee salary
   const updateSalary = async (id: string, newSalary: number) => {
     await dispatch(updateSalaryAsync({ id, salary: newSalary })).unwrap()
+    setSortBy('updatedAt')
+    setSortOrder('desc')
+    setPage(1)
     await refreshEmployees()
   }
 
@@ -207,6 +218,9 @@ export const useEmployees = () => {
     revision: NewSalaryRevisionInput
   ): Promise<any> => {
     const response = await api.post(`/employees/${employeeId}/history`, revision)
+    setSortBy('updatedAt')
+    setSortOrder('desc')
+    setPage(1)
     await refreshEmployees()
     return response.data
   }

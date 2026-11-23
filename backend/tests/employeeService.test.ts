@@ -159,6 +159,43 @@ describe('EmployeeService & Server-Side Filtering (10,000 Employees)', () => {
     await employeeService.softDeleteEmployee(created.id, 'Test completion')
   })
 
+  it('should always show the latest updated employee at the top by default using updatedAt desc', async () => {
+    // 1. Fetch current top employee
+    const initialList = await employeeService.getEmployees({ page: 1, limit: 10 })
+
+    // 2. Create a new employee
+    const testEmployee = await employeeService.createEmployee({
+      firstName: 'Latest',
+      lastName: 'Pioneer',
+      email: `latest.pioneer.${Date.now()}@acme.com`,
+      department: 'Engineering',
+      country: 'United States',
+      jobTitle: 'Senior Systems Engineer',
+      baseSalary: 140000
+    })
+
+    // Immediately after creation, this newly created employee must be at the very top (index 0)
+    const afterCreate = await employeeService.getEmployees({ page: 1, limit: 10 })
+    expect(afterCreate.data[0]?.id).toBe(testEmployee.id)
+    expect(afterCreate.data[0]?.email).toBe(testEmployee.email)
+
+    // 3. Now pick another employee and update their salary
+    const secondEmp = initialList.data[5] || initialList.data[1]
+    if (secondEmp) {
+      await employeeService.updateSalary(secondEmp.id, secondEmp.salary + 5000, {
+        reason: 'Merit Raise Test',
+        changedBy: 'Archana Sekar (HR Manager)'
+      })
+
+      // The updated employee must now be at the very top (index 0)
+      const afterUpdate = await employeeService.getEmployees({ page: 1, limit: 10 })
+      expect(afterUpdate.data[0]?.id).toBe(secondEmp.id)
+    }
+
+    // Clean up
+    await employeeService.softDeleteEmployee(testEmployee.id, 'Test cleanup')
+  })
+
   it('should export filtered employee payroll records into RFC-4180 CSV format', async () => {
     const csvData = await employeeService.exportEmployeesToCSV({
       department: 'Engineering',

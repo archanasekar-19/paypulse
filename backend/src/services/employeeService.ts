@@ -8,7 +8,7 @@ export interface GetEmployeesParams {
   department?: string
   country?: string
   status?: string
-  sortBy?: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'netSalary'
+  sortBy?: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'netSalary' | 'updatedAt'
   sortOrder?: 'asc' | 'desc'
 }
 
@@ -88,10 +88,10 @@ export class EmployeeService {
     department?: string
     country?: string
     status?: string
-    sortBy?: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'netSalary'
+    sortBy?: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'netSalary' | 'updatedAt'
     sortOrder?: 'asc' | 'desc'
   }) {
-    const { search, department, country, status, sortBy = 'salary', sortOrder = 'desc' } = params
+    const { search, department, country, status, sortBy = 'updatedAt', sortOrder = 'desc' } = params
 
     // Build Prisma WHERE filter condition
     const where: Prisma.EmployeeWhereInput = {}
@@ -135,17 +135,21 @@ export class EmployeeService {
       where.OR = searchConditions
     }
 
-    let orderBy: Prisma.EmployeeOrderByWithRelationInput = { baseSalaryUSD: sortOrder }
-    if (sortBy === 'name') {
-      orderBy = { lastName: sortOrder }
+    let orderBy: Prisma.EmployeeOrderByWithRelationInput[] = [{ updatedAt: sortOrder }]
+    if (sortBy === 'salary') {
+      orderBy = [{ baseSalaryUSD: sortOrder }, { updatedAt: 'desc' }]
+    } else if (sortBy === 'name') {
+      orderBy = [{ lastName: sortOrder }, { firstName: sortOrder }, { updatedAt: 'desc' }]
     } else if (sortBy === 'department') {
-      orderBy = { department: sortOrder }
+      orderBy = [{ department: sortOrder }, { updatedAt: 'desc' }]
     } else if (sortBy === 'country') {
-      orderBy = { country: sortOrder }
+      orderBy = [{ country: sortOrder }, { updatedAt: 'desc' }]
     } else if (sortBy === 'hireDate') {
-      orderBy = { hireDate: sortOrder }
+      orderBy = [{ hireDate: sortOrder }, { updatedAt: 'desc' }]
     } else if (sortBy === 'netSalary') {
-      orderBy = { netSalaryUSD: sortOrder }
+      orderBy = [{ netSalaryUSD: sortOrder }, { updatedAt: 'desc' }]
+    } else if (sortBy === 'updatedAt') {
+      orderBy = [{ updatedAt: sortOrder }]
     }
 
     return { where, orderBy }
@@ -202,7 +206,9 @@ export class EmployeeService {
       baseSalaryUSD: emp.baseSalaryUSD,
       status: emp.status,
       deletedAt: emp.deletedAt ? emp.deletedAt.toISOString() : null,
-      hireDate: emp.hireDate.toISOString()
+      hireDate: emp.hireDate.toISOString(),
+      updatedAt: emp.updatedAt.toISOString(),
+      createdAt: emp.createdAt.toISOString()
     }))
 
     return {
@@ -574,7 +580,7 @@ export class EmployeeService {
     department?: string
     country?: string
     status?: string
-    sortBy?: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'netSalary'
+    sortBy?: 'salary' | 'name' | 'department' | 'country' | 'hireDate' | 'netSalary' | 'updatedAt'
     sortOrder?: 'asc' | 'desc'
   }): Promise<string> {
     const { where, orderBy } = this.buildFilterQuery(params)
