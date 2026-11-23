@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { employeeService } from '../src/services/employeeService'
 import { analyticsService } from '../src/services/analyticsService'
+import { prisma } from '../src/db/prisma'
 
 describe('EmployeeService & Server-Side Filtering (10,000 Employees)', () => {
   it('should return paginated results with default limit and pagination metadata', async () => {
@@ -173,8 +174,11 @@ describe('EmployeeService & Server-Side Filtering (10,000 Employees)', () => {
     expect(activeAgain.data.length).toBe(1)
     expect(activeAgain.data[0]?.status).toBe('ACTIVE')
 
-    // Soft delete once more for test cleanup
+    // Soft delete once more for test verification
     await employeeService.softDeleteEmployee(created.id, 'Test completion')
+
+    // Clean up test employee completely from DB so tests leave no inactive records
+    await prisma.employee.delete({ where: { id: created.id } })
   })
 
   it('should always show the latest updated employee at the top by default using updatedAt desc', async () => {
@@ -210,8 +214,8 @@ describe('EmployeeService & Server-Side Filtering (10,000 Employees)', () => {
       expect(afterUpdate.data[0]?.id).toBe(secondEmp.id)
     }
 
-    // Clean up
-    await employeeService.softDeleteEmployee(testEmployee.id, 'Test cleanup')
+    // Clean up test employee completely from DB so tests leave no inactive records
+    await prisma.employee.delete({ where: { id: testEmployee.id } })
   })
 
   it('should export filtered employee payroll records into RFC-4180 CSV format', async () => {
@@ -278,5 +282,8 @@ describe('AnalyticsService (Macro KPIs over 10,000 Records)', () => {
     const afterDeleteSummary = await analyticsService.getSummaryMetrics()
     expect(afterDeleteSummary.totalEmployees).toBe(initialSummary.totalEmployees)
     expect(afterDeleteSummary.totalPayrollUSD).toBe(initialSummary.totalPayrollUSD)
+
+    // Clean up test employee completely from DB so tests leave no inactive records
+    await prisma.employee.delete({ where: { id: tempEmp.id } })
   })
 })
