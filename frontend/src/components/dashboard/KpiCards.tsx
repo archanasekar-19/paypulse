@@ -1,5 +1,5 @@
 import type React from 'react'
-import { Grid, Paper, Box, Typography } from '@mui/material'
+import { Grid, Paper, Box, Typography, Skeleton } from '@mui/material'
 import { Icon } from '@iconify/react'
 import { AppIcon } from '../../constants/icons'
 import type { KpiMetrics } from '../../types'
@@ -20,7 +20,7 @@ interface MetricCardItem {
   accentBg: string
 }
 
-export const KpiCards: React.FC<KpiCardsProps> = ({ metrics }) => {
+export const KpiCards: React.FC<KpiCardsProps> = ({ metrics, isLoading = false }) => {
   const cards: MetricCardItem[] = [
     {
       id: 'total-payroll',
@@ -86,63 +86,101 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ metrics }) => {
           >
             {/* Top Row: Icon Badge (iLovePDF signature rounded-square) */}
             <Box sx={{ mb: 1.75 }}>
-              <Box
-                sx={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '10px',
-                  backgroundColor: card.accentBg,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: card.accentColor,
-                  transition: 'transform 0.18s ease'
-                }}
-              >
-                <Icon icon={card.icon} width="24" height="24" />
-              </Box>
+              {isLoading ? (
+                <Skeleton
+                  variant="rounded"
+                  width={44}
+                  height={44}
+                  animation="wave"
+                  sx={{ borderRadius: '10px' }}
+                />
+              ) : (
+                <Box
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: '10px',
+                    backgroundColor: card.accentBg,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: card.accentColor,
+                    transition: 'transform 0.18s ease'
+                  }}
+                >
+                  <Icon icon={card.icon} width="24" height="24" />
+                </Box>
+              )}
             </Box>
 
             {/* Content: Title -> Value -> Subtext */}
             <Box>
-              <Typography
-                variant="subtitle2"
-                sx={{
-                  fontWeight: 700,
-                  color: '#1e242e',
-                  fontSize: '0.925rem',
-                  lineHeight: 1.25,
-                  mb: 0.5
-                }}
-              >
-                {card.title}
-              </Typography>
+              {isLoading ? (
+                <>
+                  <Skeleton
+                    variant="text"
+                    width="65%"
+                    height={22}
+                    animation="wave"
+                    sx={{ mb: 0.5, borderRadius: '4px' }}
+                  />
+                  <Skeleton
+                    variant="text"
+                    width="85%"
+                    height={38}
+                    animation="wave"
+                    sx={{ mb: 0.5, borderRadius: '6px' }}
+                  />
+                  <Skeleton
+                    variant="text"
+                    width="95%"
+                    height={18}
+                    animation="wave"
+                    sx={{ borderRadius: '4px' }}
+                  />
+                </>
+              ) : (
+                <>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#1e242e',
+                      fontSize: '0.925rem',
+                      lineHeight: 1.25,
+                      mb: 0.5
+                    }}
+                  >
+                    {card.title}
+                  </Typography>
 
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 800,
-                  color: '#0f172a',
-                  fontSize: '1.4rem',
-                  lineHeight: 1.2,
-                  letterSpacing: '-0.02em',
-                  mb: 0.5
-                }}
-              >
-                {card.value}
-              </Typography>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 800,
+                      color: '#0f172a',
+                      fontSize: '1.4rem',
+                      lineHeight: 1.2,
+                      letterSpacing: '-0.02em',
+                      mb: 0.5
+                    }}
+                  >
+                    {card.value}
+                  </Typography>
 
-              <Typography
-                variant="caption"
-                sx={{
-                  color: '#64748b',
-                  fontSize: '0.75rem',
-                  lineHeight: 1.35,
-                  display: 'block'
-                }}
-              >
-                {card.subtitle}
-              </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: '#64748b',
+                      fontSize: '0.75rem',
+                      lineHeight: 1.35,
+                      display: 'block'
+                    }}
+                  >
+                    {card.subtitle}
+                  </Typography>
+                </>
+              )}
             </Box>
           </Paper>
         </Grid>

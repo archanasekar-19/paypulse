@@ -14,10 +14,11 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  CircularProgress,
   Alert,
   ToggleButton,
-  ToggleButtonGroup
+  ToggleButtonGroup,
+  Skeleton,
+  LinearProgress
 } from '@mui/material'
 import {
   ResponsiveContainer,
@@ -102,11 +103,93 @@ export const PayInsightsPage: React.FC<PayInsightsPageProps> = ({
 
   if (isLoading && !insights) {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 12 }}>
-        <CircularProgress size={42} sx={{ color: '#ff5442', mb: 2 }} />
-        <Typography variant="body1" sx={{ color: '#64748b', fontWeight: 600 }}>
-          Calculating compensation benchmarks and SQL pay distributions...
-        </Typography>
+      <Box sx={{ width: '100%', pb: 8 }}>
+        {/* Top Header Skeleton */}
+        <Box
+          sx={{
+            mb: 3.5,
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            justifyContent: 'space-between',
+            alignItems: { xs: 'flex-start', md: 'center' },
+            gap: 2
+          }}
+        >
+          <Box sx={{ flex: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Skeleton variant="text" width={140} height={20} sx={{ borderRadius: '4px' }} />
+              <Skeleton variant="rounded" width={160} height={22} sx={{ borderRadius: '6px' }} />
+            </Box>
+            <Skeleton variant="text" width="60%" height={40} sx={{ mb: 0.5, borderRadius: '6px' }} />
+            <Skeleton variant="text" width="85%" height={22} sx={{ borderRadius: '4px' }} />
+          </Box>
+          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <Skeleton key={i} variant="rounded" width={72} height={28} sx={{ borderRadius: '6px' }} />
+            ))}
+          </Box>
+        </Box>
+
+        {/* Section 1: KPI Cards Skeleton */}
+        <Grid container spacing={2} sx={{ mb: 4 }}>
+          {[1, 2, 3, 4].map((i) => (
+            <Grid key={i} size={{ xs: 12, sm: 6, md: 3 }}>
+              <Paper sx={{ p: 2.25, borderRadius: '12px', border: '1px solid #eef1f6', height: '100%' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                  <Skeleton variant="rounded" width={32} height={32} sx={{ borderRadius: '8px' }} />
+                  <Skeleton variant="text" width="55%" height={20} sx={{ borderRadius: '4px' }} />
+                </Box>
+                <Skeleton variant="text" width="75%" height={38} sx={{ mb: 0.5, borderRadius: '6px' }} />
+                <Skeleton variant="text" width="85%" height={18} sx={{ borderRadius: '4px' }} />
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+
+        {/* Section 2: Country Chart & Table Skeleton */}
+        <Paper sx={{ p: 3, mb: 4, borderRadius: '14px', border: '1px solid #eef1f6' }}>
+          <Skeleton variant="text" width={280} height={32} sx={{ mb: 0.5, borderRadius: '6px' }} />
+          <Skeleton variant="text" width="70%" height={20} sx={{ mb: 3, borderRadius: '4px' }} />
+          <Skeleton variant="rounded" width="100%" height={280} sx={{ mb: 3, borderRadius: '10px' }} />
+          <Skeleton variant="rounded" width="100%" height={180} sx={{ borderRadius: '10px' }} />
+        </Paper>
+
+        {/* Section 3: Role Bands Skeleton */}
+        <Paper sx={{ p: 3, mb: 4, borderRadius: '14px', border: '1px solid #eef1f6' }}>
+          <Skeleton variant="text" width={320} height={32} sx={{ mb: 0.5, borderRadius: '6px' }} />
+          <Skeleton variant="text" width="60%" height={20} sx={{ mb: 2.5, borderRadius: '4px' }} />
+          <Box sx={{ display: 'flex', gap: 2, mb: 2.5 }}>
+            <Skeleton variant="rounded" width={300} height={38} sx={{ borderRadius: '8px' }} />
+            <Skeleton variant="rounded" width={200} height={38} sx={{ borderRadius: '8px' }} />
+          </Box>
+          <Skeleton variant="rounded" width="100%" height={260} sx={{ borderRadius: '10px' }} />
+        </Paper>
+
+        {/* Section 4: Distribution Skeleton */}
+        <Paper sx={{ p: 3, mb: 4, borderRadius: '14px', border: '1px solid #eef1f6' }}>
+          <Skeleton variant="text" width={300} height={32} sx={{ mb: 2.5, borderRadius: '6px' }} />
+          <Grid container spacing={1.5} sx={{ mb: 3 }}>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Grid key={i} size={{ xs: 6, sm: 4, md: 2.4 }}>
+                <Skeleton variant="rounded" width="100%" height={74} sx={{ borderRadius: '10px' }} />
+              </Grid>
+            ))}
+          </Grid>
+          <Skeleton variant="rounded" width="100%" height={240} sx={{ borderRadius: '10px' }} />
+        </Paper>
+
+        {/* Section 5: Outliers Skeleton */}
+        <Paper sx={{ p: 3, borderRadius: '14px', border: '1px solid #eef1f6' }}>
+          <Skeleton variant="text" width={340} height={32} sx={{ mb: 2.5, borderRadius: '6px' }} />
+          <Grid container spacing={2} sx={{ mb: 2.5 }}>
+            {[1, 2, 3].map((i) => (
+              <Grid key={i} size={{ xs: 12, sm: 4 }}>
+                <Skeleton variant="rounded" width="100%" height={80} sx={{ borderRadius: '10px' }} />
+              </Grid>
+            ))}
+          </Grid>
+          <Skeleton variant="rounded" width="100%" height={220} sx={{ borderRadius: '10px' }} />
+        </Paper>
       </Box>
     )
   }
@@ -143,7 +226,21 @@ export const PayInsightsPage: React.FC<PayInsightsPageProps> = ({
   }))
 
   return (
-    <Box sx={{ width: '100%', pb: 8 }}>
+    <Box sx={{ width: '100%', pb: 8, position: 'relative' }}>
+      {isLoading && (
+        <LinearProgress
+          sx={{
+            position: 'sticky',
+            top: 62,
+            zIndex: 10,
+            mb: 2,
+            height: 3,
+            borderRadius: '2px',
+            backgroundColor: '#fff0ee',
+            '& .MuiLinearProgress-bar': { backgroundColor: '#ff5442' }
+          }}
+        />
+      )}
       {/* Top Breadcrumb & Country Filter Header */}
       <Box
         sx={{

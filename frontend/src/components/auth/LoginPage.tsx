@@ -14,6 +14,7 @@ import {
   Divider
 } from '@mui/material'
 import { Icon } from '@iconify/react'
+import toast from 'react-hot-toast'
 import { AppIcon } from '../../constants/icons'
 import { api } from '../../services/api'
 import type { AuthUser } from '../../types'
@@ -46,6 +47,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     } else {
       sessionStorage.setItem('paypulse_auth_user', JSON.stringify(guestUser))
     }
+    toast.success('Welcome! Logged in as Guest.')
     onLoginSuccess(guestUser)
   }
 
@@ -77,6 +79,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         } else {
           sessionStorage.setItem('paypulse_auth_user', JSON.stringify(authUser))
         }
+        toast.success(`Welcome back, ${authUser.name}!`)
         onLoginSuccess(authUser)
         return
       } else {

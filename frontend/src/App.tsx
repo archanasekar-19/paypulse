@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { ThemeProvider, CssBaseline, Box, Typography, Alert } from '@mui/material'
+import toast, { Toaster } from 'react-hot-toast'
 import { theme } from './theme'
 import { Navbar } from './components/layout/Navbar'
 import { LoginPage } from './components/auth/LoginPage'
@@ -115,12 +116,6 @@ export default function App() {
   const [viewingPaySlipEmployee, setViewingPaySlipEmployee] = useState<Employee | null>(null)
   const [viewingHistoryEmployee, setViewingHistoryEmployee] = useState<Employee | null>(null)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const [notification, setNotification] = useState<{ message: string; severity: 'success' | 'error' } | null>(null)
-
-  const showNotification = (message: string, severity: 'success' | 'error' = 'success') => {
-    setNotification({ message, severity })
-    setTimeout(() => setNotification(null), 3500)
-  }
 
   // Session Logout Handler
   const handleLogout = async () => {
@@ -132,52 +127,52 @@ export default function App() {
     localStorage.removeItem('paypulse_auth_user')
     sessionStorage.removeItem('paypulse_auth_user')
     setCurrentUser(null)
-    showNotification('Signed out successfully.')
+    toast.success('Signed out successfully.')
   }
 
-  // Unified Save Handler (Add & Edit)
+  // Unified Save Handler (Add & Edit) with react-hot-toast
   const handleSaveEmployee = async (employeeData: EmployeeFormData) => {
     if (editingEmployee) {
       await updateEmployee(editingEmployee.id, employeeData)
-      showNotification('Employee record updated successfully!')
+      toast.success('Employee record updated successfully!')
     } else {
       await createEmployee(employeeData)
-      showNotification('New employee onboarded successfully!')
+      toast.success('Employee record added successfully!')
     }
     await Promise.all([refreshAnalytics(), refreshPayInsights()])
   }
 
-  // Save Welfare & Deductions from PaySlipModal
+  // Save Welfare & Deductions from PaySlipModal with react-hot-toast
   const handleSaveCompensationAdjustments = async (
     id: string,
     compensationData: CompensationUpdateData
   ) => {
     await updateEmployee(id, compensationData)
-    showNotification('Compensation structure and take-home pay updated successfully!')
+    toast.success('Payslip updated successfully!')
     await Promise.all([refreshAnalytics(), refreshPayInsights()])
   }
 
-  // Soft-Delete / Deactivate (HTTP PATCH to INACTIVE)
+  // Soft-Delete / Deactivate with react-hot-toast
   const handleConfirmDelete = async (id: string, reason?: string) => {
     await deleteEmployee(id, reason)
-    showNotification('Employee deactivated (marked INACTIVE) and preserved in audit log!')
+    toast.success('Employee deactivated successfully!')
     await Promise.all([refreshAnalytics(), refreshPayInsights()])
   }
 
-  // Export filtered payroll roster
+  // Export filtered payroll roster with react-hot-toast
   const handleExportCSV = async () => {
     try {
       await exportToCSV()
-      showNotification('Payroll roster exported successfully to CSV!')
+      toast.success('Payroll records exported successfully!')
     } catch {
-      showNotification('Failed to export payroll records to CSV', 'error')
+      toast.error('Failed to export payroll records to CSV')
     }
   }
 
-  // Record a salary revision into timeline
+  // Record a salary revision into timeline with react-hot-toast
   const handleRecordSalaryRevision = async (id: string, revision: NewSalaryRevisionInput) => {
     const res = await recordSalaryRevision(id, revision)
-    showNotification('Salary adjustment recorded in timeline and active compensation updated!')
+    toast.success('Salary adjustment recorded successfully!')
     await Promise.all([refreshAnalytics(), refreshPayInsights()])
     return res
   }
@@ -194,6 +189,19 @@ export default function App() {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3500,
+            style: {
+              borderRadius: '8px',
+              background: '#1e242e',
+              color: '#ffffff',
+              fontSize: '0.85rem',
+              fontWeight: 600
+            }
+          }}
+        />
         <LoginPage onLoginSuccess={(user) => setCurrentUser(user)} />
       </ThemeProvider>
     )
@@ -202,6 +210,34 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+
+      {/* React Hot Toast Container */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3500,
+          style: {
+            borderRadius: '8px',
+            background: '#1e242e',
+            color: '#ffffff',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)'
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#ffffff'
+            }
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#ffffff'
+            }
+          }
+        }}
+      />
 
       <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', width: '100%' }}>
         {/* Navigation Header with Route Switcher */}
@@ -214,17 +250,6 @@ export default function App() {
 
         {/* Main Workspace */}
         <Box sx={{ flex: 1, py: 2.75, px: { xs: 2, sm: 3.5, md: 4.5 }, maxWidth: 1440, mx: 'auto', width: '100%' }}>
-          {/* Toast Notification */}
-          {notification && (
-            <Alert
-              severity={notification.severity}
-              sx={{ mb: 3 }}
-              onClose={() => setNotification(null)}
-            >
-              {notification.message}
-            </Alert>
-          )}
-
           {/* Backend Error Alert */}
           {error && (
             <Alert severity="warning" sx={{ mb: 3 }}>
