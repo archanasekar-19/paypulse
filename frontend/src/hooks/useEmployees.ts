@@ -112,17 +112,23 @@ export const useEmployees = () => {
     await refreshEmployees()
   }
 
-  // Update employee record
+  // Update employee record (supports full profile & compensation adjustments)
   const updateEmployee = async (
     id: string,
     payload: {
-      firstName: string
-      lastName: string
-      email: string
-      department: string
-      country: string
-      jobTitle: string
-      baseSalary: number
+      firstName?: string
+      lastName?: string
+      email?: string
+      department?: string
+      country?: string
+      jobTitle?: string
+      baseSalary?: number
+      bonus?: number
+      subsidy?: number
+      allowance?: number
+      overtimePay?: number
+      insurance?: number
+      leaveDeduction?: number
     }
   ) => {
     await dispatch(updateEmployeeAsync({ id, data: payload })).unwrap()

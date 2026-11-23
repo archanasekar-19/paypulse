@@ -1,4 +1,4 @@
-import type React from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -9,46 +9,144 @@ import {
   Typography,
   Grid,
   Divider,
-  Chip
+  Chip,
+  TextField,
+  InputAdornment,
+  Alert,
+  CircularProgress
 } from '@mui/material'
 import { Icon } from '@iconify/react'
-import type { Employee } from '../../types'
+import type { Employee, CompensationUpdateData } from '../../types'
 import { formatCurrency } from '../../utils/formatters'
 import { getDepartmentStyle } from '../../constants/departments'
+
+const FX_RATES_TO_USD: Record<string, number> = {
+  USD: 1.0,
+  EUR: 1.08,
+  GBP: 1.28,
+  INR: 0.012,
+  JPY: 0.0067,
+  SGD: 0.75,
+  CAD: 0.74
+}
 
 interface PaySlipModalProps {
   open: boolean
   employee: Employee | null
   onClose: () => void
+  onSave?: (id: string, data: CompensationUpdateData) => Promise<void>
 }
 
-export const PaySlipModal: React.FC<PaySlipModalProps> = ({ open, employee, onClose }) => {
+export const PaySlipModal: React.FC<PaySlipModalProps> = ({
+  open,
+  employee,
+  onClose,
+  onSave
+}) => {
+  // Editable Welfare Additions state
+  const [baseSalary, setBaseSalary] = useState<string>('0')
+  const [bonus, setBonus] = useState<string>('0')
+  const [subsidy, setSubsidy] = useState<string>('0')
+  const [allowance, setAllowance] = useState<string>('0')
+  const [overtimePay, setOvertimePay] = useState<string>('0')
+
+  // Editable Wage Deductions state
+  const [insurance, setInsurance] = useState<string>('0')
+  const [leaveDeduction, setLeaveDeduction] = useState<string>('0')
+
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Populate data when dialog opens
+  useEffect(() => {
+    if (open && employee) {
+      const base = employee.baseSalary || employee.salary || 0
+      setBaseSalary(String(base))
+      setBonus(String(employee.bonus || Math.round(base * 0.08)))
+      setSubsidy(String(employee.subsidy || Math.round(base * 0.03)))
+      setAllowance(String(employee.allowance || Math.round(base * 0.04)))
+      setOvertimePay(String(employee.overtimePay || 0))
+      setInsurance(String(employee.insurance || Math.round(base * 0.065)))
+      setLeaveDeduction(String(employee.leaveDeduction || 0))
+      setError(null)
+    }
+  }, [open, employee])
+
   if (!employee) return null
 
   const currency = employee.currency
-  const baseSalary = employee.baseSalary || employee.salary || 0
-  const bonus = employee.bonus || Math.round(baseSalary * 0.08)
-  const subsidy = employee.subsidy || Math.round(baseSalary * 0.03)
-  const allowance = employee.allowance || Math.round(baseSalary * 0.04)
-  const overtimePay = employee.overtimePay || 0
-  const grossSalary = employee.grossSalary || (baseSalary + bonus + subsidy + allowance + overtimePay)
-
-  const insurance = employee.insurance || Math.round(baseSalary * 0.065)
-  const leaveDeduction = employee.leaveDeduction || 0
-  const totalDeductions = insurance + leaveDeduction
-
-  const netSalary = employee.netSalary || (grossSalary - totalDeductions)
+  const fxRate = FX_RATES_TO_USD[currency] || 1.0
   const deptStyle = getDepartmentStyle(employee.department)
+
+  // Live Calculated Numbers
+  const numBase = Math.max(0, Number(baseSalary) || 0)
+  const numBonus = Math.max(0, Number(bonus) || 0)
+  const numSubsidy = Math.max(0, Number(subsidy) || 0)
+  const numAllowance = Math.max(0, Number(allowance) || 0)
+  const numOvertime = Math.max(0, Number(overtimePay) || 0)
+  const grossSalary = numBase + numBonus + numSubsidy + numAllowance + numOvertime
+
+  const numInsurance = Math.max(0, Number(insurance) || 0)
+  const numLeave = Math.max(0, Number(leaveDeduction) || 0)
+  const totalDeductions = numInsurance + numLeave
+
+  const netSalary = Math.max(0, grossSalary - totalDeductions)
+  const netSalaryUSD = Math.round(netSalary * fxRate)
+
+  // Reset to original values
+  const handleResetOriginal = () => {
+    const base = employee.baseSalary || employee.salary || 0
+    setBaseSalary(String(base))
+    setBonus(String(employee.bonus || Math.round(base * 0.08)))
+    setSubsidy(String(employee.subsidy || Math.round(base * 0.03)))
+    setAllowance(String(employee.allowance || Math.round(base * 0.04)))
+    setOvertimePay(String(employee.overtimePay || 0))
+    setInsurance(String(employee.insurance || Math.round(base * 0.065)))
+    setLeaveDeduction(String(employee.leaveDeduction || 0))
+    setError(null)
+  }
+
+  // Handle Save
+  const handleSave = async () => {
+    if (numBase <= 0) {
+      setError('Basic Salary must be greater than 0')
+      return
+    }
+
+    if (!onSave) {
+      onClose()
+      return
+    }
+
+    try {
+      setIsSaving(true)
+      setError(null)
+      await onSave(employee.id, {
+        baseSalary: numBase,
+        bonus: numBonus,
+        subsidy: numSubsidy,
+        allowance: numAllowance,
+        overtimePay: numOvertime,
+        insurance: numInsurance,
+        leaveDeduction: numLeave
+      })
+      setIsSaving(false)
+      onClose()
+    } catch (err: any) {
+      setIsSaving(false)
+      setError(err?.message || 'Failed to update compensation package')
+    }
+  }
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      {/* Slip Title */}
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
+      {/* Slip Title Header */}
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
-              width: 40,
-              height: 40,
+              width: 42,
+              height: 42,
               borderRadius: 2,
               backgroundColor: '#eff6ff',
               color: '#2563eb',
@@ -61,28 +159,43 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({ open, employee, onCl
           </Box>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-              Compensation Slip & Welfare Breakdown
+              Compensation Slip & Welfare Structure
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              ACME Corporation • Automated Payroll & Welfare Engine
+              Customizable salary additions, allowances, and statutory wage deductions
             </Typography>
           </Box>
         </Box>
 
-        <Chip
-          label={employee.country}
-          size="small"
-          variant="outlined"
-          sx={{ fontWeight: 600, color: 'text.secondary' }}
-        />
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Chip
+            icon={<Icon icon="solar:pen-linear" width="14" height="14" />}
+            label="Editable Breakdown"
+            size="small"
+            color="primary"
+            variant="outlined"
+            sx={{ fontWeight: 600, fontSize: '0.72rem' }}
+          />
+          <Chip
+            label={employee.country}
+            size="small"
+            sx={{ fontWeight: 600, backgroundColor: '#f1f5f9', color: 'text.secondary' }}
+          />
+        </Box>
       </DialogTitle>
 
-      <DialogContent dividers sx={{ py: 3 }}>
-        {/* Employee Summary Card */}
+      <DialogContent dividers sx={{ py: 2.5 }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {/* Employee Summary Ribbon */}
         <Box
           sx={{
-            p: 2,
-            mb: 3,
+            p: 1.75,
+            mb: 2.5,
             backgroundColor: '#f8fafc',
             borderRadius: 2,
             border: '1px solid #e2e8f0',
@@ -90,11 +203,11 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({ open, employee, onCl
             justifyContent: 'space-between',
             alignItems: 'center',
             flexWrap: 'wrap',
-            gap: 2
+            gap: 1.5
           }}
         >
           <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
               {employee.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -106,7 +219,7 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({ open, employee, onCl
             <Box
               component="span"
               sx={{
-                px: 1.2,
+                px: 1,
                 py: 0.3,
                 borderRadius: 1,
                 fontSize: '0.75rem',
@@ -119,20 +232,20 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({ open, employee, onCl
               {employee.department}
             </Box>
             <Chip
-              label={`Currency: ${currency}`}
+              label={`Contract Currency: ${currency}`}
               size="small"
-              sx={{ fontWeight: 600, backgroundColor: '#f1f5f9', color: '#334155' }}
+              sx={{ fontWeight: 600, backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }}
             />
           </Box>
         </Box>
 
-        {/* 2-Column Itemized Breakdown (Earnings / Welfare vs Deductions) */}
-        <Grid container spacing={3}>
-          {/* Left Column: Earnings & Welfare Salary */}
+        {/* Symmetrical 2-Column ERP Workstation: Left (Additions) | Right (Deductions) */}
+        <Grid container spacing={2.5}>
+          {/* Column 1: Welfare Salary & Additions */}
           <Grid size={{ xs: 12, md: 6 }}>
             <Box
               sx={{
-                p: 2.5,
+                p: 2,
                 borderRadius: 2,
                 backgroundColor: '#ffffff',
                 border: '1px solid #e2e8f0',
@@ -143,65 +256,93 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({ open, employee, onCl
               }}
             >
               <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <Icon icon="solar:wallet-money-bold" width="20" height="20" color="#16a34a" />
+                {/* Column Header */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.75 }}>
+                  <Icon icon="solar:wallet-money-bold" width="18" height="18" color="#16a34a" />
                   <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#16a34a' }}>
-                    Welfare Salary & Earnings (Additions)
+                    Earnings & Welfare Additions (+)
                   </Typography>
                 </Box>
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Basic Salary:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {formatCurrency(baseSalary, currency)}
-                    </Typography>
-                  </Box>
+                {/* Symmetrical Compact Input Stack */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+                  <TextField
+                    label="Basic Base Salary"
+                    size="small"
+                    type="number"
+                    fullWidth
+                    value={baseSalary}
+                    onChange={(e) => setBaseSalary(e.target.value)}
+                    slotProps={{
+                      input: {
+                        startAdornment: <InputAdornment position="start">{currency}</InputAdornment>
+                      }
+                    }}
+                  />
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Performance Bonus:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      +{formatCurrency(bonus, currency)}
-                    </Typography>
-                  </Box>
+                  <TextField
+                    label="Performance Bonus"
+                    size="small"
+                    type="number"
+                    fullWidth
+                    value={bonus}
+                    onChange={(e) => setBonus(e.target.value)}
+                    slotProps={{
+                      input: {
+                        startAdornment: <InputAdornment position="start">+{currency}</InputAdornment>
+                      }
+                    }}
+                  />
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Commute / Meal Subsidy:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      +{formatCurrency(subsidy, currency)}
-                    </Typography>
-                  </Box>
+                  <TextField
+                    label="Commute / Meal Subsidy"
+                    size="small"
+                    type="number"
+                    fullWidth
+                    value={subsidy}
+                    onChange={(e) => setSubsidy(e.target.value)}
+                    slotProps={{
+                      input: {
+                        startAdornment: <InputAdornment position="start">+{currency}</InputAdornment>
+                      }
+                    }}
+                  />
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Role / Housing Allowance:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      +{formatCurrency(allowance, currency)}
-                    </Typography>
-                  </Box>
+                  <TextField
+                    label="Role / Housing Allowance"
+                    size="small"
+                    type="number"
+                    fullWidth
+                    value={allowance}
+                    onChange={(e) => setAllowance(e.target.value)}
+                    slotProps={{
+                      input: {
+                        startAdornment: <InputAdornment position="start">+{currency}</InputAdornment>
+                      }
+                    }}
+                  />
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Overtime Wages:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      +{formatCurrency(overtimePay, currency)}
-                    </Typography>
-                  </Box>
+                  <TextField
+                    label="Overtime Wages"
+                    size="small"
+                    type="number"
+                    fullWidth
+                    value={overtimePay}
+                    onChange={(e) => setOvertimePay(e.target.value)}
+                    slotProps={{
+                      input: {
+                        startAdornment: <InputAdornment position="start">+{currency}</InputAdornment>
+                      }
+                    }}
+                  />
                 </Box>
               </Box>
 
-              <Box sx={{ mt: 2.5 }}>
-                <Divider sx={{ mb: 1.5 }} />
+              {/* Gross Earnings Subtotal */}
+              <Box sx={{ mt: 2 }}>
+                <Divider sx={{ mb: 1.25 }} />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary' }}>
                     Gross Earnings Subtotal:
                   </Typography>
                   <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#16a34a' }}>
@@ -212,11 +353,11 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({ open, employee, onCl
             </Box>
           </Grid>
 
-          {/* Right Column: Deduction of Wages */}
+          {/* Column 2: Deductions of Wages */}
           <Grid size={{ xs: 12, md: 6 }}>
             <Box
               sx={{
-                p: 2.5,
+                p: 2,
                 borderRadius: 2,
                 backgroundColor: '#ffffff',
                 border: '1px solid #e2e8f0',
@@ -227,51 +368,74 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({ open, employee, onCl
               }}
             >
               <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <Icon icon="solar:shield-warning-bold" width="20" height="20" color="#dc2626" />
+                {/* Column Header */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.75 }}>
+                  <Icon icon="solar:shield-warning-bold" width="18" height="18" color="#dc2626" />
                   <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#dc2626' }}>
-                    Deduction of Wages (Subtractions)
+                    Deductions of Wages (−)
                   </Typography>
                 </Box>
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Social & Health Insurance:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#dc2626' }}>
-                      -{formatCurrency(insurance, currency)}
-                    </Typography>
-                  </Box>
+                {/* Symmetrical Compact Input Stack */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+                  <TextField
+                    label="Social & Health Insurance"
+                    size="small"
+                    type="number"
+                    fullWidth
+                    value={insurance}
+                    onChange={(e) => setInsurance(e.target.value)}
+                    slotProps={{
+                      input: {
+                        startAdornment: <InputAdornment position="start">−{currency}</InputAdornment>
+                      }
+                    }}
+                  />
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Absence / Leave Deductions:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#dc2626' }}>
-                      -{formatCurrency(leaveDeduction, currency)}
-                    </Typography>
-                  </Box>
+                  <TextField
+                    label="Absence / Unpaid Leave Deductions"
+                    size="small"
+                    type="number"
+                    fullWidth
+                    value={leaveDeduction}
+                    onChange={(e) => setLeaveDeduction(e.target.value)}
+                    slotProps={{
+                      input: {
+                        startAdornment: <InputAdornment position="start">−{currency}</InputAdornment>
+                      }
+                    }}
+                  />
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', opacity: 0.5 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Other Statutory Levies:
+                  {/* Informational Policy Box keeping visual symmetry with left column */}
+                  <Box
+                    sx={{
+                      p: 1.75,
+                      borderRadius: 1.5,
+                      backgroundColor: '#f8fafc',
+                      border: '1px dashed #cbd5e1',
+                      mt: 0.5
+                    }}
+                  >
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', display: 'block', mb: 0.5 }}>
+                      <Icon icon="solar:info-circle-linear" width="14" height="14" style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                      Statutory Compliance Notes:
                     </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      -{formatCurrency(0, currency)}
+                    <Typography variant="caption" color="text.secondary">
+                      Insurance contributions and unpaid leave deductions are calculated based on {employee.country} labour regulations.
                     </Typography>
                   </Box>
                 </Box>
               </Box>
 
-              <Box sx={{ mt: 2.5 }}>
-                <Divider sx={{ mb: 1.5 }} />
+              {/* Total Deductions Subtotal */}
+              <Box sx={{ mt: 2 }}>
+                <Divider sx={{ mb: 1.25 }} />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary' }}>
                     Total Deductions Subtotal:
                   </Typography>
                   <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#dc2626' }}>
-                    -{formatCurrency(totalDeductions, currency)}
+                    −{formatCurrency(totalDeductions, currency)}
                   </Typography>
                 </Box>
               </Box>
@@ -279,11 +443,11 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({ open, employee, onCl
           </Grid>
         </Grid>
 
-        {/* Bottom Callout: Net Take-Home Salary */}
+        {/* Live Net Take-Home Salary Banner */}
         <Box
           sx={{
-            mt: 3,
-            p: 2.5,
+            mt: 2.5,
+            p: 2,
             borderRadius: 2,
             backgroundColor: '#0f172a',
             color: '#ffffff',
@@ -295,31 +459,46 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({ open, employee, onCl
           }}
         >
           <Box>
-            <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Net Take-Home Pay (Gross Subtotal − Total Deductions)
+            <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600 }}>
+              Live Net Take-Home Compensation (Gross Subtotal − Total Deductions)
             </Typography>
-            <Typography variant="h5" sx={{ fontWeight: 800, color: '#38bdf8', mt: 0.3 }}>
+            <Typography variant="h5" sx={{ fontWeight: 800, color: '#38bdf8', mt: 0.2 }}>
               {formatCurrency(netSalary, currency)}
             </Typography>
           </Box>
 
-          {currency !== 'USD' && employee.netSalaryUSD && (
+          {currency !== 'USD' && (
             <Box sx={{ textAlign: { xs: 'left', sm: 'right' } }}>
               <Typography variant="caption" sx={{ color: '#94a3b8' }}>
                 Normalized Baseline
               </Typography>
               <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#f1f5f9' }}>
-                ≈ {formatCurrency(employee.netSalaryUSD, 'USD')}
+                ≈ {formatCurrency(netSalaryUSD, 'USD')}
               </Typography>
             </Box>
           )}
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} variant="contained" color="primary">
-          Close Pay Slip
+      <DialogActions sx={{ px: 3, py: 2, justifyContent: 'space-between' }}>
+        <Button onClick={handleResetOriginal} color="inherit" size="small" disabled={isSaving}>
+          Reset Values
         </Button>
+
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button onClick={onClose} color="inherit" disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            color="primary"
+            disabled={isSaving}
+            startIcon={isSaving ? <CircularProgress size={16} color="inherit" /> : <Icon icon="solar:diskette-bold" width="18" height="18" />}
+          >
+            {isSaving ? 'Saving Adjustments...' : 'Save Adjustments'}
+          </Button>
+        </Box>
       </DialogActions>
     </Dialog>
   )

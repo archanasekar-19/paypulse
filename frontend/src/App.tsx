@@ -10,7 +10,7 @@ import { DeleteConfirmDialog } from './components/employees/DeleteConfirmDialog'
 import { PaySlipModal } from './components/employees/PaySlipModal'
 import { useEmployees } from './hooks/useEmployees'
 import { useAnalytics } from './hooks/useAnalytics'
-import type { Employee, EmployeeFormData } from './types'
+import type { Employee, EmployeeFormData, CompensationUpdateData } from './types'
 
 export default function App() {
   const {
@@ -63,6 +63,16 @@ export default function App() {
       await createEmployee(employeeData)
       showNotification('New employee onboarded successfully!')
     }
+    await refreshAnalytics()
+  }
+
+  // Save Welfare & Deductions from PaySlipModal
+  const handleSaveCompensationAdjustments = async (
+    id: string,
+    compensationData: CompensationUpdateData
+  ) => {
+    await updateEmployee(id, compensationData)
+    showNotification('Compensation structure and take-home pay updated successfully!')
     await refreshAnalytics()
   }
 
@@ -166,6 +176,7 @@ export default function App() {
             open={Boolean(viewingPaySlipEmployee)}
             employee={viewingPaySlipEmployee}
             onClose={() => setViewingPaySlipEmployee(null)}
+            onSave={handleSaveCompensationAdjustments}
           />
 
           {/* Delete Confirmation Popup Dialog (Delete) */}

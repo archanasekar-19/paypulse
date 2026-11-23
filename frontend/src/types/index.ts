@@ -33,6 +33,16 @@ export interface EmployeeFormData {
   baseSalary: number
 }
 
+export interface CompensationUpdateData {
+  baseSalary?: number
+  bonus?: number
+  subsidy?: number
+  allowance?: number
+  overtimePay?: number
+  insurance?: number
+  leaveDeduction?: number
+}
+
 export interface KpiMetrics {
   totalPayrollUSD: number
   totalEmployees: number

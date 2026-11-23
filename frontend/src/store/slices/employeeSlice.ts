@@ -90,13 +90,19 @@ export const updateEmployeeAsync = createAsyncThunk(
     }: {
       id: string
       data: {
-        firstName: string
-        lastName: string
-        email: string
-        department: string
-        country: string
-        jobTitle: string
-        baseSalary: number
+        firstName?: string
+        lastName?: string
+        email?: string
+        department?: string
+        country?: string
+        jobTitle?: string
+        baseSalary?: number
+        bonus?: number
+        subsidy?: number
+        allowance?: number
+        overtimePay?: number
+        insurance?: number
+        leaveDeduction?: number
       }
     },
     { rejectWithValue }
@@ -233,6 +239,16 @@ export const employeeSlice = createSlice({
             country: updated.country,
             jobTitle: updated.jobTitle,
             salary: updated.baseSalary,
+            baseSalary: updated.baseSalary,
+            bonus: updated.bonus,
+            subsidy: updated.subsidy,
+            allowance: updated.allowance,
+            overtimePay: updated.overtimePay,
+            grossSalary: updated.grossSalary,
+            insurance: updated.insurance,
+            leaveDeduction: updated.leaveDeduction,
+            netSalary: updated.netSalary,
+            netSalaryUSD: updated.netSalaryUSD,
             currency: updated.currency
           }
         }
