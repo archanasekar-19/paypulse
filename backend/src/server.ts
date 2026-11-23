@@ -20,6 +20,10 @@ app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', service: 'PayPulse Backend API' })
 })
 
+app.get('/', (req: Request, res: Response) => {
+  res.json({ status: 'ok', service: 'PayPulse Backend API', version: '1.0.0' })
+})
+
 // Mount application REST API routes
 app.use('/api/auth', authRoutes)
 app.use('/api/employees', employeeRoutes)

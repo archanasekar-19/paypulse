@@ -65,12 +65,21 @@ for (const dept of DEPARTMENTS) {
 }
 
 export async function seed() {
-  console.log('🌱 Starting ACME Org 10,000 employee database seed...')
+  console.log('🌱 Checking ACME Org employee database seed status...')
   const startTime = Date.now()
 
-  // 1. Clear existing employees to ensure determinism
-  await prisma.employee.deleteMany({})
-  console.log('🧹 Cleaned existing employee records.')
+  // 1. Check existing count to avoid unnecessary reseeding on production restarts
+  const existingCount = await prisma.employee.count()
+  if (existingCount >= 10000) {
+    console.log(`✅ Database already has ${existingCount.toLocaleString()} employees. Skipping initial seed.`)
+    return
+  }
+
+  // Clear any partial records if count is less than target
+  if (existingCount > 0) {
+    await prisma.employee.deleteMany({})
+    console.log('🧹 Cleaned partial employee records.')
+  }
 
   const TOTAL_RECORDS = 10000
   const BATCH_SIZE = 1000
