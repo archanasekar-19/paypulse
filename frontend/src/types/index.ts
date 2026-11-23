@@ -136,3 +136,102 @@ export interface AuthUser {
   role: string
   organization?: string
 }
+
+export interface PayInsightsOverview {
+  headcount: number
+  totalPayrollUSD: number
+  avgSalaryUSD: number
+  medianSalaryUSD: number
+  minSalaryUSD: number
+  maxSalaryUSD: number
+}
+
+export interface PayInsightsCountry {
+  country: string
+  currency: string
+  headcount: number
+  totalCostLocal: number
+  totalCostUSD: number
+  minSalaryLocal: number
+  maxSalaryLocal: number
+  avgSalaryLocal: number
+  medianSalaryLocal: number
+  minSalaryUSD: number
+  maxSalaryUSD: number
+  avgSalaryUSD: number
+  medianSalaryUSD: number
+}
+
+export interface PayInsightsRoleCohort {
+  department: string
+  jobTitle: string
+  country: string
+  currency: string
+  headcount: number
+  minSalary: number
+  maxSalary: number
+  avgSalary: number
+  medianSalary: number
+  p25Salary: number
+  p75Salary: number
+  minSalaryUSD: number
+  maxSalaryUSD: number
+  avgSalaryUSD: number
+  medianSalaryUSD: number
+}
+
+export interface SalaryHistogramBin {
+  bandLabel: string
+  count: number
+  avgSalaryUSD: number
+  minSalaryUSD: number
+  maxSalaryUSD: number
+}
+
+export interface SalaryPercentiles {
+  p10: number
+  p25: number
+  p50: number
+  p75: number
+  p90: number
+  p95: number
+}
+
+export interface SalaryDistributionData {
+  histogram: SalaryHistogramBin[]
+  percentiles: SalaryPercentiles
+}
+
+export interface PayOutlierItem {
+  id: string
+  employeeCode: string
+  name: string
+  email: string
+  department: string
+  jobTitle: string
+  country: string
+  currency: string
+  baseSalary: number
+  baseSalaryUSD: number
+  benchmarkMedian: number
+  deviationPercent: number
+  outlierStatus: 'BELOW_BAND' | 'ABOVE_BAND'
+}
+
+export interface PayOutliersData {
+  thresholdPercent: number
+  summary: {
+    totalOutliers: number
+    belowBandCount: number
+    aboveBandCount: number
+  }
+  items: PayOutlierItem[]
+}
+
+export interface DeepDivePayInsights {
+  overview: PayInsightsOverview
+  byCountry: PayInsightsCountry[]
+  byDepartmentTitle: PayInsightsRoleCohort[]
+  distribution: SalaryDistributionData
+  outliers: PayOutliersData
+}

@@ -31,6 +31,10 @@ export const AppIcon = {
   HEADCOUNT: 'solar:users-group-two-rounded-bold-duotone',
   CHART: 'solar:chart-2-bold-duotone',
   SCALE: 'solar:scale-bold-duotone',
+  MAP_PIN: 'solar:map-point-bold-duotone',
+  TARGET: 'solar:target-bold-duotone',
+  ARROW_UP: 'solar:arrow-up-bold',
+  ARROW_DOWN: 'solar:arrow-down-bold',
 
   // Status, Mechanics & Warnings
   CALENDAR: 'solar:calendar-date-bold-duotone',

@@ -9,6 +9,8 @@ interface NavbarProps {
   organizationName?: string
   userName?: string
   userRole?: string
+  activeTab?: 'roster' | 'analytics'
+  onTabChange?: (tab: 'roster' | 'analytics') => void
   onLogout?: () => void
 }
 
@@ -17,6 +19,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   organizationName = 'ACME Corp • Global',
   userName,
   userRole,
+  activeTab = 'roster',
+  onTabChange,
   onLogout
 }) => {
   const activeName = currentUser?.name || userName || 'Archana Sekar'
@@ -45,29 +49,88 @@ export const Navbar: React.FC<NavbarProps> = ({
     >
       <Toolbar sx={{ height: 62, px: { xs: 2, sm: 4, md: 5 }, justifyContent: 'space-between' }}>
         {/* Brand Logo & Title with iLovePDF Coral/Red Accent */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 3.5 } }}>
           <Box
             sx={{
-              width: 36,
-              height: 36,
-              borderRadius: '10px',
-              backgroundColor: '#fff0ee',
-              color: '#ff5442',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              gap: 1.25,
+              cursor: onTabChange ? 'pointer' : 'default'
             }}
+            onClick={() => onTabChange?.('roster')}
           >
-            <Icon icon={AppIcon.PAYROLL} width="22" height="22" />
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: '10px',
+                backgroundColor: '#fff0ee',
+                color: '#ff5442',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Icon icon={AppIcon.PAYROLL} width="22" height="22" />
+            </Box>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.15, color: '#1e242e', fontSize: '1.1rem' }}>
+                PayPulse
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>
+                Global Compensation & Payroll Hub
+              </Typography>
+            </Box>
           </Box>
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.15, color: '#1e242e', fontSize: '1.1rem' }}>
-              PayPulse
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>
-              Global Compensation & Payroll Hub
-            </Typography>
-          </Box>
+
+          {/* Navigation Route Tabs */}
+          {onTabChange && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Button
+                size="small"
+                onClick={() => onTabChange('roster')}
+                startIcon={<Icon icon={AppIcon.PAYROLL} width="16" height="16" />}
+                sx={{
+                  height: 32,
+                  px: 1.5,
+                  borderRadius: '8px',
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
+                  textTransform: 'none',
+                  backgroundColor: activeTab === 'roster' ? '#1e242e' : 'transparent',
+                  color: activeTab === 'roster' ? '#ffffff' : '#64748b',
+                  '&:hover': {
+                    backgroundColor: activeTab === 'roster' ? '#0f172a' : '#f8fafc',
+                    color: activeTab === 'roster' ? '#ffffff' : '#1e242e'
+                  }
+                }}
+              >
+                Payroll Roster
+              </Button>
+
+              <Button
+                size="small"
+                onClick={() => onTabChange('analytics')}
+                startIcon={<Icon icon={AppIcon.CHART} width="16" height="16" />}
+                sx={{
+                  height: 32,
+                  px: 1.5,
+                  borderRadius: '8px',
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
+                  textTransform: 'none',
+                  backgroundColor: activeTab === 'analytics' ? '#ff5442' : 'transparent',
+                  color: activeTab === 'analytics' ? '#ffffff' : '#64748b',
+                  '&:hover': {
+                    backgroundColor: activeTab === 'analytics' ? '#e03a29' : '#fff0ee',
+                    color: activeTab === 'analytics' ? '#ffffff' : '#ff5442'
+                  }
+                }}
+              >
+                Pay Insights & Analytics
+              </Button>
+            </Box>
+          )}
         </Box>
 
         {/* Org Status Badge, User Profile & Logout Action */}
@@ -84,7 +147,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               height: 28,
               borderRadius: '6px',
               fontSize: '0.75rem',
-              display: { xs: 'none', sm: 'inline-flex' }
+              display: { xs: 'none', lg: 'inline-flex' }
             }}
           />
 

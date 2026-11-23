@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ThemeProvider, CssBaseline, Box, Typography, Alert } from '@mui/material'
 import { theme } from './theme'
 import { Navbar } from './components/layout/Navbar'
 import { LoginPage } from './components/auth/LoginPage'
+import { PayInsightsPage } from './components/analytics/PayInsightsPage'
 import { KpiCards } from './components/dashboard/KpiCards'
 import { SalaryFilterToolbar } from './components/common/SalaryFilterToolbar'
 import { EmployeeTable } from './components/employees/EmployeeTable'
@@ -12,6 +13,7 @@ import { PaySlipModal } from './components/employees/PaySlipModal'
 import { SalaryHistoryModal } from './components/employees/SalaryHistoryModal'
 import { useEmployees } from './hooks/useEmployees'
 import { useAnalytics } from './hooks/useAnalytics'
+import { usePayInsights } from './hooks/usePayInsights'
 import { api } from './services/api'
 import type { Employee, EmployeeFormData, CompensationUpdateData, NewSalaryRevisionInput, AuthUser } from './types'
 
@@ -25,6 +27,42 @@ export default function App() {
       return null
     }
   })
+
+  // URL-driven navigation tab state: 'roster' | 'analytics'
+  const [activeTab, setActiveTab] = useState<'roster' | 'analytics'>(() => {
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname === '/analytics' || window.location.hash === '#analytics') {
+        return 'analytics'
+      }
+    }
+    return 'roster'
+  })
+
+  // Synchronize browser history / hash on navigation
+  const handleTabChange = (tab: 'roster' | 'analytics') => {
+    setActiveTab(tab)
+    if (tab === 'analytics') {
+      window.history.pushState(null, '', '#analytics')
+    } else {
+      window.history.pushState(null, '', '#roster')
+    }
+  }
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      if (window.location.pathname === '/analytics' || window.location.hash === '#analytics') {
+        setActiveTab('analytics')
+      } else {
+        setActiveTab('roster')
+      }
+    }
+    window.addEventListener('popstate', handleLocationChange)
+    window.addEventListener('hashchange', handleLocationChange)
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange)
+      window.removeEventListener('hashchange', handleLocationChange)
+    }
+  }, [])
 
   const {
     employees,
@@ -58,6 +96,18 @@ export default function App() {
 
   // Real-time Executive Compensation Analytics
   const { metrics, isAnalyticsLoading, refreshAnalytics } = useAnalytics()
+
+  // Deep Dive Pay Insights Hook (SQL Aggregated)
+  const {
+    insights: payInsights,
+    isLoading: isPayInsightsLoading,
+    error: payInsightsError,
+    selectedCountry: insightsCountry,
+    setSelectedCountry: setInsightsCountry,
+    thresholdPercent: outlierThreshold,
+    setThresholdPercent: setOutlierThreshold,
+    refreshPayInsights
+  } = usePayInsights()
 
   // Modal & Dialog state
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
@@ -94,7 +144,7 @@ export default function App() {
       await createEmployee(employeeData)
       showNotification('New employee onboarded successfully!')
     }
-    await refreshAnalytics()
+    await Promise.all([refreshAnalytics(), refreshPayInsights()])
   }
 
   // Save Welfare & Deductions from PaySlipModal
@@ -104,14 +154,14 @@ export default function App() {
   ) => {
     await updateEmployee(id, compensationData)
     showNotification('Compensation structure and take-home pay updated successfully!')
-    await refreshAnalytics()
+    await Promise.all([refreshAnalytics(), refreshPayInsights()])
   }
 
   // Soft-Delete / Deactivate (HTTP PATCH to INACTIVE)
   const handleConfirmDelete = async (id: string, reason?: string) => {
     await deleteEmployee(id, reason)
     showNotification('Employee deactivated (marked INACTIVE) and preserved in audit log!')
-    await refreshAnalytics()
+    await Promise.all([refreshAnalytics(), refreshPayInsights()])
   }
 
   // Export filtered payroll roster
@@ -128,7 +178,7 @@ export default function App() {
   const handleRecordSalaryRevision = async (id: string, revision: NewSalaryRevisionInput) => {
     const res = await recordSalaryRevision(id, revision)
     showNotification('Salary adjustment recorded in timeline and active compensation updated!')
-    await refreshAnalytics()
+    await Promise.all([refreshAnalytics(), refreshPayInsights()])
     return res
   }
 
@@ -154,21 +204,16 @@ export default function App() {
       <CssBaseline />
 
       <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', width: '100%' }}>
-        {/* Navigation Header */}
-        <Navbar currentUser={currentUser} onLogout={handleLogout} />
+        {/* Navigation Header with Route Switcher */}
+        <Navbar
+          currentUser={currentUser}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          onLogout={handleLogout}
+        />
 
         {/* Main Workspace */}
         <Box sx={{ flex: 1, py: 2.75, px: { xs: 2, sm: 3.5, md: 4.5 }, maxWidth: 1440, mx: 'auto', width: '100%' }}>
-          {/* iLovePDF Clean Symmetrical Hero Header */}
-          <Box sx={{ mb: 2.5, textAlign: { xs: 'left', sm: 'center' }, maxWidth: 860, mx: 'auto' }}>
-            <Typography variant="h4" sx={{ fontWeight: 800, color: '#1e242e', letterSpacing: '-0.025em', mb: 0.5, fontSize: { xs: '1.5rem', sm: '1.85rem' } }}>
-              Global Compensation & Payroll Hub
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
-              Real-time payroll analytics, attendance & leave mechanics, and employee welfare management across 7 operating countries
-            </Typography>
-          </Box>
-
           {/* Toast Notification */}
           {notification && (
             <Alert
@@ -187,43 +232,70 @@ export default function App() {
             </Alert>
           )}
 
-          {/* Executive Macro KPI Cards (Total Payroll, Headcount, Average, Median) */}
-          <KpiCards metrics={metrics} isLoading={isAnalyticsLoading} />
+          {/* ROUTE 1: Deep Dive Pay Insights Analytics */}
+          {activeTab === 'analytics' ? (
+            <PayInsightsPage
+              insights={payInsights}
+              isLoading={isPayInsightsLoading}
+              error={payInsightsError}
+              selectedCountry={insightsCountry}
+              onCountryChange={setInsightsCountry}
+              thresholdPercent={outlierThreshold}
+              onThresholdChange={setOutlierThreshold}
+              onBackToRoster={() => handleTabChange('roster')}
+            />
+          ) : (
+            /* ROUTE 2: Main Payroll Roster & Operations */
+            <>
+              {/* iLovePDF Clean Symmetrical Hero Header */}
+              <Box sx={{ mb: 2.5, textAlign: { xs: 'left', sm: 'center' }, maxWidth: 860, mx: 'auto' }}>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: '#1e242e', letterSpacing: '-0.025em', mb: 0.5, fontSize: { xs: '1.5rem', sm: '1.85rem' } }}>
+                  Global Compensation & Payroll Hub
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
+                  Real-time payroll analytics, attendance & leave mechanics, and employee welfare management across 7 operating countries
+                </Typography>
+              </Box>
 
-          {/* Standalone Reusable Filter Toolbar with Add Employee & Export CSV Actions */}
-          <SalaryFilterToolbar
-            searchInput={searchInput}
-            onSearchInputChange={setSearchInput}
-            onSearch={handleSearch}
-            appliedSearch={appliedSearch}
-            selectedDepartment={selectedDepartment}
-            onDepartmentChange={handleDepartmentChange}
-            selectedCountry={selectedCountry}
-            onCountryChange={handleCountryChange}
-            totalCount={totalRecords}
-            onResetFilters={handleResetFilters}
-            onOpenAddEmployee={() => setIsAddModalOpen(true)}
-            onExportCSV={handleExportCSV}
-            isExporting={isExporting}
-          />
+              {/* Executive Macro KPI Cards (Total Payroll, Headcount, Average, Median) */}
+              <KpiCards metrics={metrics} isLoading={isAnalyticsLoading} />
 
-          {/* High-Performance Paginated Employee Table with Edit & Delete Actions */}
-          <EmployeeTable
-            employees={employees}
-            totalRecords={totalRecords}
-            currentPage={page}
-            pageSize={pageSize}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            isLoading={isLoading}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-            onSortChange={handleSortChange}
-            onViewPaySlip={(emp) => setViewingPaySlipEmployee(emp)}
-            onViewHistory={(emp) => setViewingHistoryEmployee(emp)}
-            onEditEmployee={(emp) => setEditingEmployee(emp)}
-            onDeleteEmployee={(emp) => setDeletingEmployee(emp)}
-          />
+              {/* Standalone Reusable Filter Toolbar with Add Employee & Export CSV Actions */}
+              <SalaryFilterToolbar
+                searchInput={searchInput}
+                onSearchInputChange={setSearchInput}
+                onSearch={handleSearch}
+                appliedSearch={appliedSearch}
+                selectedDepartment={selectedDepartment}
+                onDepartmentChange={handleDepartmentChange}
+                selectedCountry={selectedCountry}
+                onCountryChange={handleCountryChange}
+                totalCount={totalRecords}
+                onResetFilters={handleResetFilters}
+                onOpenAddEmployee={() => setIsAddModalOpen(true)}
+                onExportCSV={handleExportCSV}
+                isExporting={isExporting}
+              />
+
+              {/* High-Performance Paginated Employee Table with Edit & Delete Actions */}
+              <EmployeeTable
+                employees={employees}
+                totalRecords={totalRecords}
+                currentPage={page}
+                pageSize={pageSize}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+                isLoading={isLoading}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+                onSortChange={handleSortChange}
+                onViewPaySlip={(emp) => setViewingPaySlipEmployee(emp)}
+                onViewHistory={(emp) => setViewingHistoryEmployee(emp)}
+                onEditEmployee={(emp) => setEditingEmployee(emp)}
+                onDeleteEmployee={(emp) => setDeletingEmployee(emp)}
+              />
+            </>
+          )}
 
           {/* Unified Symmetrical Employee Dialog (Reused for Add & Edit with populated data) */}
           <AddEmployeeModal
