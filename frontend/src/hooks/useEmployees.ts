@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '../services/api'
 import { useAppDispatch, useAppSelector } from '../store'
+import type { SalaryHistoryResponse, NewSalaryRevisionInput } from '../types'
 import {
   fetchEmployees,
   updateSalaryAsync,
@@ -194,6 +195,22 @@ export const useEmployees = () => {
     }
   }
 
+  // Fetch Salary History timeline
+  const fetchSalaryHistory = async (employeeId: string): Promise<SalaryHistoryResponse> => {
+    const response = await api.get<SalaryHistoryResponse>(`/employees/${employeeId}/history`)
+    return response.data
+  }
+
+  // Record a new Salary Revision
+  const recordSalaryRevision = async (
+    employeeId: string,
+    revision: NewSalaryRevisionInput
+  ): Promise<any> => {
+    const response = await api.post(`/employees/${employeeId}/history`, revision)
+    await refreshEmployees()
+    return response.data
+  }
+
   return {
     employees,
     totalRecords,
@@ -233,6 +250,8 @@ export const useEmployees = () => {
     updateSalary,
     deleteEmployee,
     exportToCSV,
+    fetchSalaryHistory,
+    recordSalaryRevision,
 
     // Refresh
     refreshEmployees

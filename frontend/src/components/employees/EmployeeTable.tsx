@@ -35,6 +35,7 @@ interface EmployeeTableProps {
   onPageSizeChange: (newPageSize: number) => void
   onSortChange: (column: 'salary' | 'name' | 'department' | 'country' | 'hireDate') => void
   onViewPaySlip?: (employee: Employee) => void
+  onViewHistory?: (employee: Employee) => void
   onEditEmployee: (employee: Employee) => void
   onDeleteEmployee: (employee: Employee) => void
 }
@@ -51,6 +52,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
   onPageSizeChange,
   onSortChange,
   onViewPaySlip,
+  onViewHistory,
   onEditEmployee,
   onDeleteEmployee
 }) => {
@@ -284,6 +286,25 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                               }}
                             >
                               <Icon icon={AppIcon.PAYSLIP} width="16" height="16" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+
+                        {onViewHistory && (
+                          <Tooltip title="View Salary Revision Timeline & Audit Trail">
+                            <IconButton
+                              size="small"
+                              onClick={() => onViewHistory(emp)}
+                              sx={{
+                                width: 30,
+                                height: 30,
+                                borderRadius: '8px',
+                                backgroundColor: '#fef3c7',
+                                color: '#d97706',
+                                '&:hover': { backgroundColor: '#fde68a' }
+                              }}
+                            >
+                              <Icon icon={AppIcon.TIMELINE} width="16" height="16" />
                             </IconButton>
                           </Tooltip>
                         )}

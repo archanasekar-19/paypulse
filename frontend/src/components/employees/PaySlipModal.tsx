@@ -48,13 +48,15 @@ interface PaySlipModalProps {
   employee: Employee | null
   onClose: () => void
   onSave?: (id: string, data: CompensationUpdateData) => Promise<void>
+  onOpenHistory?: (employee: Employee) => void
 }
 
 export const PaySlipModal: React.FC<PaySlipModalProps> = ({
   open,
   employee,
   onClose,
-  onSave
+  onSave,
+  onOpenHistory
 }) => {
   // Standard Welfare Additions state
   const [baseSalary, setBaseSalary] = useState<string>('0')
@@ -457,6 +459,30 @@ export const PaySlipModal: React.FC<PaySlipModalProps> = ({
                 color: '#2563eb'
               }}
             />
+            {onOpenHistory && (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  onClose()
+                  onOpenHistory(employee)
+                }}
+                sx={{
+                  height: 24,
+                  borderRadius: '6px',
+                  textTransform: 'none',
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  borderColor: '#fde68a',
+                  color: '#b45309',
+                  backgroundColor: '#fffbeb',
+                  '&:hover': { backgroundColor: '#fef3c7' }
+                }}
+                startIcon={<Icon icon={AppIcon.TIMELINE} width="14" height="14" />}
+              >
+                Revision Timeline
+              </Button>
+            )}
             <IconButton size="small" onClick={onClose} sx={{ color: '#94a3b8', borderRadius: '8px', p: 0.5 }}>
               <Icon icon={AppIcon.CLOSE} width="20" height="20" />
             </IconButton>

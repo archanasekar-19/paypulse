@@ -8,9 +8,10 @@ import { EmployeeTable } from './components/employees/EmployeeTable'
 import { AddEmployeeModal } from './components/employees/AddEmployeeModal'
 import { DeleteConfirmDialog } from './components/employees/DeleteConfirmDialog'
 import { PaySlipModal } from './components/employees/PaySlipModal'
+import { SalaryHistoryModal } from './components/employees/SalaryHistoryModal'
 import { useEmployees } from './hooks/useEmployees'
 import { useAnalytics } from './hooks/useAnalytics'
-import type { Employee, EmployeeFormData, CompensationUpdateData } from './types'
+import type { Employee, EmployeeFormData, CompensationUpdateData, NewSalaryRevisionInput } from './types'
 
 export default function App() {
   const {
@@ -38,7 +39,9 @@ export default function App() {
     updateEmployee,
     deleteEmployee,
     isExporting,
-    exportToCSV
+    exportToCSV,
+    fetchSalaryHistory,
+    recordSalaryRevision
   } = useEmployees()
 
   // Real-time Executive Compensation Analytics
@@ -48,6 +51,7 @@ export default function App() {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
   const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null)
   const [viewingPaySlipEmployee, setViewingPaySlipEmployee] = useState<Employee | null>(null)
+  const [viewingHistoryEmployee, setViewingHistoryEmployee] = useState<Employee | null>(null)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [notification, setNotification] = useState<{ message: string; severity: 'success' | 'error' } | null>(null)
 
@@ -93,6 +97,14 @@ export default function App() {
     } catch {
       showNotification('Failed to export payroll records to CSV', 'error')
     }
+  }
+
+  // Record a salary revision into timeline
+  const handleRecordSalaryRevision = async (id: string, revision: NewSalaryRevisionInput) => {
+    const res = await recordSalaryRevision(id, revision)
+    showNotification('Salary adjustment recorded in timeline and active compensation updated!')
+    await refreshAnalytics()
+    return res
   }
 
   const isEmployeeModalOpen = isAddModalOpen || Boolean(editingEmployee)
@@ -173,6 +185,7 @@ export default function App() {
             onPageSizeChange={setPageSize}
             onSortChange={handleSortChange}
             onViewPaySlip={(emp) => setViewingPaySlipEmployee(emp)}
+            onViewHistory={(emp) => setViewingHistoryEmployee(emp)}
             onEditEmployee={(emp) => setEditingEmployee(emp)}
             onDeleteEmployee={(emp) => setDeletingEmployee(emp)}
           />
@@ -191,6 +204,7 @@ export default function App() {
             employee={viewingPaySlipEmployee}
             onClose={() => setViewingPaySlipEmployee(null)}
             onSave={handleSaveCompensationAdjustments}
+            onOpenHistory={(emp) => setViewingHistoryEmployee(emp)}
           />
 
           {/* Delete Confirmation Popup Dialog (Delete) */}
@@ -199,6 +213,15 @@ export default function App() {
             employee={deletingEmployee}
             onClose={() => setDeletingEmployee(null)}
             onConfirm={handleConfirmDelete}
+          />
+
+          {/* Salary Revision Audit Trail & Timeline Modal */}
+          <SalaryHistoryModal
+            open={Boolean(viewingHistoryEmployee)}
+            employee={viewingHistoryEmployee}
+            onClose={() => setViewingHistoryEmployee(null)}
+            onFetchHistory={fetchSalaryHistory}
+            onRecordRevision={handleRecordSalaryRevision}
           />
         </Box>
       </Box>

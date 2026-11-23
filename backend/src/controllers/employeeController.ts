@@ -180,20 +180,25 @@ export class EmployeeController {
   }
 
   /**
-   * PUT /api/employees/:id/salary (Update Salary)
+   * PUT /api/employees/:id/salary (Update Salary with Audit Trail)
    */
   async updateSalary(req: Request, res: Response) {
     try {
       const id = Array.isArray(req.params.id) ? req.params.id[0]! : (req.params.id as string)
-      const { salary } = req.body
+      const { salary, reason, changedBy, effectiveDate, notes } = req.body
 
       if (typeof salary !== 'number' || salary <= 0) {
         return res.status(400).json({ error: 'Salary must be a positive number' })
       }
 
-      const updated = await employeeService.updateSalary(id, salary)
+      const updated = await employeeService.updateSalary(id, salary, {
+        reason,
+        changedBy,
+        effectiveDate,
+        notes
+      })
       return res.status(200).json({
-        message: 'Salary updated successfully',
+        message: 'Salary updated and audit trail recorded successfully',
         data: updated
       })
     } catch (error: any) {
@@ -202,6 +207,61 @@ export class EmployeeController {
       }
       console.error('Error updating salary:', error)
       return res.status(500).json({ error: 'Failed to update salary' })
+    }
+  }
+
+  /**
+   * GET /api/employees/:id/history (Get Chronological Salary Revision Timeline)
+   */
+  async getSalaryHistory(req: Request, res: Response) {
+    try {
+      const id = Array.isArray(req.params.id) ? req.params.id[0]! : (req.params.id as string)
+      const result = await employeeService.getSalaryHistory(id)
+      return res.status(200).json(result)
+    } catch (error: any) {
+      if (error.message === 'Employee not found') {
+        return res.status(404).json({ error: 'Employee not found' })
+      }
+      console.error('Error fetching salary history:', error)
+      return res.status(500).json({ error: 'Failed to fetch salary history timeline' })
+    }
+  }
+
+  /**
+   * POST /api/employees/:id/history (Add New Salary Revision to Timeline)
+   */
+  async addSalaryRevision(req: Request, res: Response) {
+    try {
+      const id = Array.isArray(req.params.id) ? req.params.id[0]! : (req.params.id as string)
+      const { newSalary, reason, changedBy, effectiveDate, notes } = req.body
+
+      if (typeof newSalary !== 'number' || newSalary <= 0) {
+        return res.status(400).json({ error: 'New salary amount must be a positive number' })
+      }
+      if (!reason || typeof reason !== 'string' || reason.trim() === '') {
+        return res.status(400).json({ error: 'A revision reason is required (e.g. Promotion, Annual Review)' })
+      }
+
+      const updated = await employeeService.updateSalary(id, newSalary, {
+        reason: reason.trim(),
+        changedBy: changedBy || 'Elena Vance (HR Manager)',
+        effectiveDate,
+        notes
+      })
+
+      const history = await employeeService.getSalaryHistory(id)
+
+      return res.status(201).json({
+        message: 'Salary revision recorded in timeline successfully',
+        data: updated,
+        history: history.history
+      })
+    } catch (error: any) {
+      if (error.message === 'Employee not found') {
+        return res.status(404).json({ error: 'Employee not found' })
+      }
+      console.error('Error adding salary revision:', error)
+      return res.status(500).json({ error: 'Failed to record salary revision' })
     }
   }
 

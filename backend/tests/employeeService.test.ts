@@ -75,12 +75,30 @@ describe('EmployeeService & Server-Side Filtering (10,000 Employees)', () => {
     expect(created.netSalary).toBe(created.grossSalary - (created.insurance + created.leaveDeduction))
     expect(created.netSalaryUSD).toBe(Math.round(created.netSalary * 1.28))
 
-    // 2. Update Salary
-    const updatedSalary = await employeeService.updateSalary(created.id, 135000)
+    // 2. Update Salary with Audit Trail Reason
+    const updatedSalary = await employeeService.updateSalary(created.id, 135000, {
+      reason: 'Promotion to Senior Fellow',
+      changedBy: 'Elena Vance (HR Manager)',
+      notes: 'Outstanding contribution to cryptography research.'
+    })
     expect(updatedSalary.baseSalary).toBe(135000)
     expect(updatedSalary.baseSalaryUSD).toBe(Math.round(135000 * 1.28))
     expect(updatedSalary.grossSalary).toBeGreaterThan(135000)
     expect(updatedSalary.netSalary).toBe(updatedSalary.grossSalary - (updatedSalary.insurance + updatedSalary.leaveDeduction))
+
+    // 2b. Verify Immutable Salary History Audit Trail
+    const historyData = await employeeService.getSalaryHistory(created.id)
+    expect(historyData.history.length).toBe(2)
+    // Latest entry
+    expect(historyData.history[0]?.newAmount).toBe(135000)
+    expect(historyData.history[0]?.oldAmount).toBe(120000)
+    expect(historyData.history[0]?.reason).toBe('Promotion to Senior Fellow')
+    expect(historyData.history[0]?.changedBy).toBe('Elena Vance (HR Manager)')
+    expect(historyData.history[0]?.changePercent).toBe(12.5) // (135k - 120k) / 120k = +12.5%
+    // Initial entry
+    expect(historyData.history[1]?.newAmount).toBe(120000)
+    expect(historyData.history[1]?.oldAmount).toBe(0)
+    expect(historyData.history[1]?.reason).toBe('Initial Contract Offer')
 
     // 3. Full Update Employee with Custom Welfare & Deductions
     const updatedRecord = await employeeService.updateEmployee(created.id, {

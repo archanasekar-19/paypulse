@@ -19,6 +19,9 @@ export const AppIcon = {
   PLUS: 'solar:add-circle-bold',
   TRASH: 'solar:trash-bin-trash-bold-duotone',
   EXPORT: 'solar:download-minimalistic-bold-duotone',
+  HISTORY: 'solar:history-bold-duotone',
+  TIMELINE: 'solar:clock-circle-bold-duotone',
+  TRENDING_UP: 'solar:graph-up-bold-duotone',
 
   // Modules & KPIs
   PAYROLL: 'solar:wallet-money-bold-duotone',

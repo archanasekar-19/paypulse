@@ -82,3 +82,44 @@ export interface SummaryAnalytics extends KpiMetrics {
   departmentBreakdown: DepartmentSummary[]
   countryBreakdown: CountrySummary[]
 }
+
+export interface SalaryHistoryEntry {
+  id: string
+  employeeId: string
+  oldAmount: number
+  newAmount: number
+  currency: string
+  oldAmountUSD?: number
+  newAmountUSD?: number
+  changePercent?: number
+  reason: string
+  changedBy: string
+  effectiveDate: string
+  notes?: string
+  createdAt: string
+}
+
+export interface SalaryHistoryResponse {
+  employee: {
+    id: string
+    employeeCode: string
+    name: string
+    firstName: string
+    lastName: string
+    department: string
+    country: string
+    currency: string
+    baseSalary: number
+    baseSalaryUSD: number
+    hireDate: string
+  }
+  history: SalaryHistoryEntry[]
+}
+
+export interface NewSalaryRevisionInput {
+  newSalary: number
+  reason: string
+  effectiveDate?: string
+  changedBy?: string
+  notes?: string
+}

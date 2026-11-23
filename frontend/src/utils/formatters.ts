@@ -13,6 +13,8 @@ export function formatCurrency(amount: number, currency: CurrencyCode | string =
   return isNegative ? `-${code} ${absFormatted}` : `${code} ${absFormatted}`
 }
 
+export const formatCurrencyCode = formatCurrency
+
 /**
  * Formats large amounts into compact notation for KPI cards using currency code
  * e.g. 842150000 -> "USD 842.15M"

@@ -246,7 +246,21 @@ export class EmployeeService {
         leaveDeduction,
         netSalary,
         netSalaryUSD,
-        hireDate: new Date()
+        hireDate: new Date(),
+        salaryHistory: {
+          create: {
+            oldAmount: 0,
+            newAmount: input.baseSalary,
+            currency,
+            oldAmountUSD: 0,
+            newAmountUSD: baseSalaryUSD,
+            changePercent: 0,
+            reason: (input as any).reason || 'Initial Contract Offer',
+            changedBy: (input as any).changedBy || 'Elena Vance (HR Manager)',
+            effectiveDate: new Date(),
+            notes: (input as any).notes || 'Initial onboarding compensation package.'
+          }
+        }
       }
     })
   }
@@ -349,15 +363,26 @@ export class EmployeeService {
   }
 
   /**
-   * Updates an employee's salary and recalculates normalized USD amount, gross, and net salary
+   * Updates an employee's salary and records an immutable SalaryHistory audit trail entry
    */
-  async updateSalary(id: string, newSalary: number) {
+  async updateSalary(
+    id: string,
+    newSalary: number,
+    options?: {
+      reason?: string
+      changedBy?: string
+      effectiveDate?: string | Date
+      notes?: string
+    }
+  ) {
     const employee = await prisma.employee.findUnique({ where: { id } })
     if (!employee) {
       throw new Error('Employee not found')
     }
 
     const fxRate = FX_RATES_TO_USD[employee.currency] || 1.0
+    const oldSalary = employee.baseSalary
+    const oldSalaryUSD = employee.baseSalaryUSD
     const baseSalary = newSalary
     const baseSalaryUSD = Math.round(baseSalary * fxRate)
 
@@ -365,16 +390,91 @@ export class EmployeeService {
     const netSalary = grossSalary - (employee.insurance + employee.leaveDeduction)
     const netSalaryUSD = Math.round(netSalary * fxRate)
 
-    return prisma.employee.update({
-      where: { id },
-      data: {
-        baseSalary,
-        baseSalaryUSD,
-        grossSalary,
-        netSalary,
-        netSalaryUSD
+    const changePercent =
+      oldSalary > 0
+        ? Number((((baseSalary - oldSalary) / oldSalary) * 100).toFixed(1))
+        : 0
+
+    const reason =
+      options?.reason ||
+      (baseSalary > oldSalary
+        ? 'Annual Merit & Performance Review'
+        : 'Compensation Adjustment')
+    const changedBy = options?.changedBy || 'Elena Vance (HR Manager)'
+    const effectiveDate = options?.effectiveDate
+      ? new Date(options.effectiveDate)
+      : new Date()
+    const notes =
+      options?.notes ||
+      `Salary adjusted from ${employee.currency} ${oldSalary.toLocaleString()} to ${employee.currency} ${baseSalary.toLocaleString()}`
+
+    const [updated] = await prisma.$transaction([
+      prisma.employee.update({
+        where: { id },
+        data: {
+          baseSalary,
+          baseSalaryUSD,
+          grossSalary,
+          netSalary,
+          netSalaryUSD
+        }
+      }),
+      prisma.salaryHistory.create({
+        data: {
+          employeeId: id,
+          oldAmount: oldSalary,
+          newAmount: baseSalary,
+          currency: employee.currency,
+          oldAmountUSD: oldSalaryUSD,
+          newAmountUSD: baseSalaryUSD,
+          changePercent,
+          reason,
+          changedBy,
+          effectiveDate,
+          notes
+        }
+      })
+    ])
+
+    return updated
+  }
+
+  /**
+   * Retrieves full chronological salary history timeline for an employee
+   */
+  async getSalaryHistory(employeeId: string) {
+    const employee = await prisma.employee.findUnique({
+      where: { id: employeeId },
+      select: {
+        id: true,
+        employeeCode: true,
+        firstName: true,
+        lastName: true,
+        department: true,
+        country: true,
+        currency: true,
+        baseSalary: true,
+        baseSalaryUSD: true,
+        hireDate: true
       }
     })
+
+    if (!employee) {
+      throw new Error('Employee not found')
+    }
+
+    const history = await prisma.salaryHistory.findMany({
+      where: { employeeId },
+      orderBy: { effectiveDate: 'desc' }
+    })
+
+    return {
+      employee: {
+        ...employee,
+        name: `${employee.firstName} ${employee.lastName}`
+      },
+      history
+    }
   }
 
   /**
