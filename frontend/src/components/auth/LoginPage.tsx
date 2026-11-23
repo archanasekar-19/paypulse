@@ -10,7 +10,8 @@ import {
   Alert,
   CircularProgress,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  Divider
 } from '@mui/material'
 import { Icon } from '@iconify/react'
 import { AppIcon } from '../../constants/icons'
@@ -32,6 +33,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [rememberMe, setRememberMe] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const handleGuestLogin = () => {
+    const guestUser: AuthUser = {
+      name: 'Guest Reviewer',
+      email: 'guest@paypulse.demo',
+      role: 'Guest HR Analyst',
+      organization: 'ACME Corp • Global'
+    }
+    if (rememberMe) {
+      localStorage.setItem('paypulse_auth_user', JSON.stringify(guestUser))
+    } else {
+      sessionStorage.setItem('paypulse_auth_user', JSON.stringify(guestUser))
+    }
+    onLoginSuccess(guestUser)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -324,6 +340,42 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             ) : (
               'Log In'
             )}
+          </Button>
+
+          {/* Divider */}
+          <Box sx={{ display: 'flex', alignItems: 'center', my: 2 }}>
+            <Divider sx={{ flex: 1, borderColor: '#f1f5f9' }} />
+            <Typography variant="caption" sx={{ px: 1.5, color: '#94a3b8', fontWeight: 600, fontSize: '0.72rem' }}>
+              OR
+            </Typography>
+            <Divider sx={{ flex: 1, borderColor: '#f1f5f9' }} />
+          </Box>
+
+          {/* Log In as Guest Button */}
+          <Button
+            type="button"
+            fullWidth
+            variant="outlined"
+            onClick={handleGuestLogin}
+            disabled={isLoading}
+            startIcon={<Icon icon={AppIcon.USER} width="17" height="17" />}
+            sx={{
+              height: 42,
+              borderRadius: '8px',
+              borderColor: '#e2e8f0',
+              backgroundColor: '#f8fafc',
+              color: '#334155',
+              fontWeight: 700,
+              fontSize: '0.875rem',
+              textTransform: 'none',
+              '&:hover': {
+                backgroundColor: '#f1f5f9',
+                borderColor: '#cbd5e1',
+                color: '#1e242e'
+              }
+            }}
+          >
+            Log In as Guest
           </Button>
         </Box>
       </Paper>
