@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { api } from '../services/api'
 import type { DeepDivePayInsights } from '../types'
 
-export function usePayInsights() {
+export function usePayInsights(enabled = true) {
   const [insights, setInsights] = useState<DeepDivePayInsights | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedCountry, setSelectedCountry] = useState<string>('All')
   const [thresholdPercent, setThresholdPercent] = useState<number>(20)
@@ -32,8 +32,10 @@ export function usePayInsights() {
   }, [selectedCountry, thresholdPercent])
 
   useEffect(() => {
-    fetchPayInsights()
-  }, [fetchPayInsights])
+    if (enabled) {
+      fetchPayInsights()
+    }
+  }, [enabled, fetchPayInsights])
 
   return {
     insights,

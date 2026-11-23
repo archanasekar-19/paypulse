@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react'
-import { ThemeProvider, CssBaseline, Box, Typography, Alert } from '@mui/material'
+import { useState, useEffect, lazy, Suspense } from 'react'
+import { ThemeProvider, CssBaseline, Box, Typography, Alert, Skeleton, Grid, Paper } from '@mui/material'
 import toast, { Toaster } from 'react-hot-toast'
 import { theme } from './theme'
 import { Navbar } from './components/layout/Navbar'
 import { LoginPage } from './components/auth/LoginPage'
-import { PayInsightsPage } from './components/analytics/PayInsightsPage'
 import { KpiCards } from './components/dashboard/KpiCards'
+
+// Code-split PayInsightsPage and recharts so initial load remains ultra-lightweight
+const PayInsightsPage = lazy(() => import('./components/analytics/PayInsightsPage'))
 import { SalaryFilterToolbar } from './components/common/SalaryFilterToolbar'
 import { EmployeeTable } from './components/employees/EmployeeTable'
 import { AddEmployeeModal } from './components/employees/AddEmployeeModal'
@@ -98,7 +100,7 @@ export default function App() {
   // Real-time Executive Compensation Analytics
   const { metrics, isAnalyticsLoading, refreshAnalytics } = useAnalytics()
 
-  // Deep Dive Pay Insights Hook (SQL Aggregated)
+  // Deep Dive Pay Insights Hook (SQL Aggregated, only enabled when analytics route is active)
   const {
     insights: payInsights,
     isLoading: isPayInsightsLoading,
@@ -108,7 +110,7 @@ export default function App() {
     thresholdPercent: outlierThreshold,
     setThresholdPercent: setOutlierThreshold,
     refreshPayInsights
-  } = usePayInsights()
+  } = usePayInsights(activeTab === 'analytics')
 
   // Modal & Dialog state
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
@@ -257,18 +259,42 @@ export default function App() {
             </Alert>
           )}
 
-          {/* ROUTE 1: Deep Dive Pay Insights Analytics */}
+          {/* ROUTE 1: Deep Dive Pay Insights Analytics (Code-split with Suspense) */}
           {activeTab === 'analytics' ? (
-            <PayInsightsPage
-              insights={payInsights}
-              isLoading={isPayInsightsLoading}
-              error={payInsightsError}
-              selectedCountry={insightsCountry}
-              onCountryChange={setInsightsCountry}
-              thresholdPercent={outlierThreshold}
-              onThresholdChange={setOutlierThreshold}
-              onBackToRoster={() => handleTabChange('roster')}
-            />
+            <Suspense
+              fallback={
+                <Box sx={{ width: '100%', pb: 8 }}>
+                  <Box sx={{ mb: 3.5 }}>
+                    <Skeleton variant="text" width={200} height={24} sx={{ mb: 1, borderRadius: '4px' }} />
+                    <Skeleton variant="text" width={380} height={42} sx={{ mb: 0.5, borderRadius: '6px' }} />
+                    <Skeleton variant="text" width={560} height={22} sx={{ borderRadius: '4px' }} />
+                  </Box>
+                  <Grid container spacing={2} sx={{ mb: 4 }}>
+                    {[1, 2, 3, 4].map((i) => (
+                      <Grid key={i} size={{ xs: 12, sm: 6, md: 3 }}>
+                        <Paper sx={{ p: 2.25, borderRadius: '12px', border: '1px solid #eef1f6', height: '100%' }}>
+                          <Skeleton variant="rounded" width={32} height={32} sx={{ mb: 1.5, borderRadius: '8px' }} />
+                          <Skeleton variant="text" width="75%" height={38} sx={{ mb: 0.5, borderRadius: '6px' }} />
+                          <Skeleton variant="text" width="85%" height={18} sx={{ borderRadius: '4px' }} />
+                        </Paper>
+                      </Grid>
+                    ))}
+                  </Grid>
+                  <Skeleton variant="rounded" width="100%" height={320} sx={{ borderRadius: '14px' }} />
+                </Box>
+              }
+            >
+              <PayInsightsPage
+                insights={payInsights}
+                isLoading={isPayInsightsLoading}
+                error={payInsightsError}
+                selectedCountry={insightsCountry}
+                onCountryChange={setInsightsCountry}
+                thresholdPercent={outlierThreshold}
+                onThresholdChange={setOutlierThreshold}
+                onBackToRoster={() => handleTabChange('roster')}
+              />
+            </Suspense>
           ) : (
             /* ROUTE 2: Main Payroll Roster & Operations */
             <>

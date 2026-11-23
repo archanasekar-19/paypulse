@@ -1037,3 +1037,5 @@ export const PayInsightsPage: React.FC<PayInsightsPageProps> = ({
     </Box>
   )
 }
+
+export default PayInsightsPage
