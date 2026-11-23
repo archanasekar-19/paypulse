@@ -84,13 +84,13 @@ export async function seed() {
       const globalIndex = batch * BATCH_SIZE + i + 1
       const empCode = `ACM-${String(globalIndex).padStart(5, '0')}`
 
-      const firstName = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]
-      const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]
+      const firstName = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)] || 'Alex'
+      const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)] || 'Taylor'
       const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}.${globalIndex}@acme.com`
 
-      const country = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)]
-      const dept = weightedDepartmentList[Math.floor(Math.random() * weightedDepartmentList.length)]
-      const role = dept.roles[Math.floor(Math.random() * dept.roles.length)]
+      const country = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)] || COUNTRIES[0]!
+      const dept = weightedDepartmentList[Math.floor(Math.random() * weightedDepartmentList.length)] || weightedDepartmentList[0]!
+      const role = dept.roles[Math.floor(Math.random() * dept.roles.length)] || 'Specialist'
 
       // Generate realistic salary within country range, rounded to nearest 500
       const rawSalary =
