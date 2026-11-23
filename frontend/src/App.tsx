@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { ThemeProvider, CssBaseline, Box, Typography, Alert } from '@mui/material'
 import { theme } from './theme'
 import { Navbar } from './components/layout/Navbar'
+import { KpiCards } from './components/dashboard/KpiCards'
 import { SalaryFilterToolbar } from './components/common/SalaryFilterToolbar'
 import { EmployeeTable } from './components/employees/EmployeeTable'
 import { AddEmployeeModal } from './components/employees/AddEmployeeModal'
 import { DeleteConfirmDialog } from './components/employees/DeleteConfirmDialog'
 import { useEmployees } from './hooks/useEmployees'
+import { useAnalytics } from './hooks/useAnalytics'
 import type { Employee, EmployeeFormData } from './types'
 
 export default function App() {
@@ -36,6 +38,9 @@ export default function App() {
     deleteEmployee
   } = useEmployees()
 
+  // Real-time Executive Compensation Analytics
+  const { metrics, isAnalyticsLoading, refreshAnalytics } = useAnalytics()
+
   // Modal & Dialog state
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
   const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null)
@@ -56,12 +61,14 @@ export default function App() {
       await createEmployee(employeeData)
       showNotification('New employee onboarded successfully!')
     }
+    await refreshAnalytics()
   }
 
   // Delete
   const handleConfirmDelete = async (id: string) => {
     await deleteEmployee(id)
     showNotification('Employee removed successfully from roster!')
+    await refreshAnalytics()
   }
 
   const isEmployeeModalOpen = isAddModalOpen || Boolean(editingEmployee)
@@ -80,14 +87,14 @@ export default function App() {
         <Navbar />
 
         {/* Main Workspace */}
-        <Box sx={{ flex: 1, py: 4, px: { xs: 2, sm: 4, md: 6 } }}>
+        <Box sx={{ flex: 1, py: 3.5, px: { xs: 2, sm: 4, md: 5 } }}>
           {/* Page Title */}
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800 }} gutterBottom>
-              Employee Salary Management
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h5" sx={{ fontWeight: 800 }} gutterBottom>
+              Global Compensation Overview
             </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Enterprise CRUD operations, server-side search, filtering, and pagination over 10,000 employees
+            <Typography variant="body2" color="text.secondary">
+              Real-time payroll analytics, distribution benchmarks, and employee salary roster across 7 operating countries
             </Typography>
           </Box>
 
@@ -108,6 +115,9 @@ export default function App() {
               {error} (Ensure backend server is running on http://localhost:4000)
             </Alert>
           )}
+
+          {/* Executive Macro KPI Cards (Total Payroll, Headcount, Average, Median) */}
+          <KpiCards metrics={metrics} isLoading={isAnalyticsLoading} />
 
           {/* Standalone Reusable Filter Toolbar with Add Employee Action */}
           <SalaryFilterToolbar

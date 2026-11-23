@@ -29,3 +29,22 @@ export interface KpiMetrics {
   averageSalaryUSD: number
   medianSalaryUSD: number
 }
+
+export interface DepartmentSummary {
+  department: string
+  headcount: number
+  totalSpendUSD: number
+  averageSalaryUSD: number
+}
+
+export interface CountrySummary {
+  country: string
+  currency: string
+  headcount: number
+  totalSpendUSD: number
+}
+
+export interface SummaryAnalytics extends KpiMetrics {
+  departmentBreakdown: DepartmentSummary[]
+  countryBreakdown: CountrySummary[]
+}

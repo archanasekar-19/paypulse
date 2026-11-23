@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 import { Grid, Paper, Box, Typography } from '@mui/material'
 import { Icon } from '@iconify/react'
 import type { KpiMetrics } from '../../types'
@@ -6,6 +6,7 @@ import { formatCurrency } from '../../utils/formatters'
 
 interface KpiCardsProps {
   metrics: KpiMetrics
+  isLoading?: boolean
 }
 
 interface MetricCardItem {
