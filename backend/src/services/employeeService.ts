@@ -96,13 +96,9 @@ export class EmployeeService {
     // Build Prisma WHERE filter condition
     const where: Prisma.EmployeeWhereInput = {}
 
-    // Status filter: defaults to ACTIVE unless specified as ALL or explicit status
-    if (status === 'ALL') {
-      // do not filter by status
-    } else if (status) {
+    // Status filter: only filter if explicitly specified (e.g. ACTIVE or INACTIVE), otherwise return all records
+    if (status && status !== 'ALL') {
       where.status = status
-    } else {
-      where.status = 'ACTIVE'
     }
 
     if (department && department !== 'ALL') {

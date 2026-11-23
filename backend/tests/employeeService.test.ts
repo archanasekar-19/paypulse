@@ -130,28 +130,33 @@ describe('EmployeeService & Server-Side Filtering (10,000 Employees)', () => {
     expect(softDeleted.status).toBe('INACTIVE')
     expect(softDeleted.deletedAt).not.toBeNull()
 
-    // 4b. Verify excluded from active employee queries by default
-    const activeSearch = await employeeService.getEmployees({ search: uniqueEmail })
+    // 4b. Verify record is still returned in default queries, now with INACTIVE status
+    const allSearch = await employeeService.getEmployees({ search: uniqueEmail })
+    expect(allSearch.data.length).toBe(1)
+    expect(allSearch.data[0]?.status).toBe('INACTIVE')
+
+    // 4c. Verify excluded when explicitly querying status: 'ACTIVE'
+    const activeSearch = await employeeService.getEmployees({ search: uniqueEmail, status: 'ACTIVE' })
     expect(activeSearch.data.length).toBe(0)
 
-    // 4c. Verify retrievable when explicitly querying INACTIVE or ALL
+    // 4d. Verify retrievable when explicitly querying status: 'INACTIVE'
     const inactiveSearch = await employeeService.getEmployees({ search: uniqueEmail, status: 'INACTIVE' })
     expect(inactiveSearch.data.length).toBe(1)
     expect(inactiveSearch.data[0]?.status).toBe('INACTIVE')
     expect(inactiveSearch.data[0]?.email).toBe(uniqueEmail)
 
-    // 4d. Verify SalaryHistory preserves complete audit trail including offboarding
+    // 4e. Verify SalaryHistory preserves complete audit trail including offboarding
     const historyAfterSoftDelete = await employeeService.getSalaryHistory(created.id)
     expect(historyAfterSoftDelete.history.length).toBe(3)
     expect(historyAfterSoftDelete.history[0]?.reason).toBe('Offboarding Alan Turing')
     expect(historyAfterSoftDelete.history[0]?.changedBy).toBe('Archana Sekar (HR Manager)')
 
-    // 4e. Verify Re-activation works seamlessly via updateEmployeeStatus
+    // 4f. Verify Re-activation works seamlessly via updateEmployeeStatus
     const reactivated = await employeeService.updateEmployeeStatus(created.id, 'ACTIVE')
     expect(reactivated.status).toBe('ACTIVE')
     expect(reactivated.deletedAt).toBeNull()
 
-    const activeAgain = await employeeService.getEmployees({ search: uniqueEmail })
+    const activeAgain = await employeeService.getEmployees({ search: uniqueEmail, status: 'ACTIVE' })
     expect(activeAgain.data.length).toBe(1)
     expect(activeAgain.data[0]?.status).toBe('ACTIVE')
 

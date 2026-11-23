@@ -214,19 +214,9 @@ export const employeeSlice = createSlice({
         state.isLoading = true
         state.error = null
       })
-      .addCase(createEmployeeAsync.fulfilled, (state, action) => {
+      .addCase(createEmployeeAsync.fulfilled, (state) => {
         state.isLoading = false
-        state.totalRecords += 1
-        state.items.unshift({
-          id: action.payload.id,
-          name: `${action.payload.firstName} ${action.payload.lastName}`,
-          email: action.payload.email,
-          department: action.payload.department,
-          country: action.payload.country,
-          jobTitle: action.payload.jobTitle,
-          salary: action.payload.baseSalary,
-          currency: action.payload.currency
-        })
+        state.error = null
       })
       .addCase(createEmployeeAsync.rejected, (state, action) => {
         state.isLoading = false
@@ -239,43 +229,9 @@ export const employeeSlice = createSlice({
         state.isLoading = true
         state.error = null
       })
-      .addCase(updateEmployeeAsync.fulfilled, (state, action) => {
+      .addCase(updateEmployeeAsync.fulfilled, (state) => {
         state.isLoading = false
-        const index = state.items.findIndex((e) => e.id === action.payload.id)
-        if (index !== -1) {
-          const updated = action.payload.updated
-          const updatedItem: Employee = {
-            id: updated.id,
-            name: `${updated.firstName} ${updated.lastName}`,
-            firstName: updated.firstName,
-            lastName: updated.lastName,
-            email: updated.email,
-            department: updated.department,
-            country: updated.country,
-            jobTitle: updated.jobTitle,
-            salary: updated.baseSalary,
-            baseSalary: updated.baseSalary,
-            bonus: updated.bonus,
-            subsidy: updated.subsidy,
-            allowance: updated.allowance,
-            overtimePay: updated.overtimePay,
-            grossSalary: updated.grossSalary,
-            earnedLeaves: updated.earnedLeaves,
-            leaveDays: updated.leaveDays,
-            insurance: updated.insurance,
-            leaveDeduction: updated.leaveDeduction,
-            customAdditions: updated.customAdditions ? (typeof updated.customAdditions === 'string' ? JSON.parse(updated.customAdditions) : updated.customAdditions) : [],
-            customDeductions: updated.customDeductions ? (typeof updated.customDeductions === 'string' ? JSON.parse(updated.customDeductions) : updated.customDeductions) : [],
-            netSalary: updated.netSalary,
-            netSalaryUSD: updated.netSalaryUSD,
-            currency: updated.currency,
-            status: updated.status,
-            updatedAt: updated.updatedAt || new Date().toISOString()
-          }
-          // Remove from current position and move to the top
-          state.items.splice(index, 1)
-          state.items.unshift(updatedItem)
-        }
+        state.error = null
       })
       .addCase(updateEmployeeAsync.rejected, (state, action) => {
         state.isLoading = false
@@ -288,20 +244,9 @@ export const employeeSlice = createSlice({
         state.isLoading = true
         state.error = null
       })
-      .addCase(updateSalaryAsync.fulfilled, (state, action) => {
+      .addCase(updateSalaryAsync.fulfilled, (state) => {
         state.isLoading = false
-        const index = state.items.findIndex((e) => e.id === action.payload.id)
-        if (index !== -1) {
-          const updated = action.payload.updated
-          state.items[index].salary = updated.baseSalary
-          state.items[index].baseSalary = updated.baseSalary
-          state.items[index].grossSalary = updated.grossSalary
-          state.items[index].netSalary = updated.netSalary
-          state.items[index].netSalaryUSD = updated.netSalaryUSD
-          state.items[index].updatedAt = new Date().toISOString()
-          const [moved] = state.items.splice(index, 1)
-          if (moved) state.items.unshift(moved)
-        }
+        state.error = null
       })
       .addCase(updateSalaryAsync.rejected, (state, action) => {
         state.isLoading = false
@@ -314,10 +259,9 @@ export const employeeSlice = createSlice({
         state.isLoading = true
         state.error = null
       })
-      .addCase(deleteEmployeeAsync.fulfilled, (state, action) => {
+      .addCase(deleteEmployeeAsync.fulfilled, (state) => {
         state.isLoading = false
-        state.items = state.items.filter((e) => e.id !== action.payload)
-        state.totalRecords = Math.max(0, state.totalRecords - 1)
+        state.error = null
       })
       .addCase(deleteEmployeeAsync.rejected, (state, action) => {
         state.isLoading = false

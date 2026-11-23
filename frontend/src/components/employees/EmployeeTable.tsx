@@ -14,7 +14,6 @@ import {
   Avatar,
   IconButton,
   Tooltip,
-  Chip,
   LinearProgress,
   CircularProgress
 } from '@mui/material'
@@ -76,30 +75,8 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
             Employee Salary Roster
           </Typography>
           <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.75rem' }}>
-            Live compensation records from backend database (10,000 employees)
+            Active compensation records and payroll details
           </Typography>
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Chip
-            size="small"
-            icon={<Icon icon={AppIcon.TIMELINE} width="14" height="14" />}
-            label={sortBy === 'updatedAt' ? 'Sorted: Latest Activity (Top)' : 'Sort: Latest First'}
-            onClick={() => onSortChange('updatedAt')}
-            sx={{
-              height: 26,
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              borderRadius: '6px',
-              cursor: 'pointer',
-              backgroundColor: sortBy === 'updatedAt' ? '#eff6ff' : '#f8fafc',
-              color: sortBy === 'updatedAt' ? '#2563eb' : '#64748b',
-              border: `1px solid ${sortBy === 'updatedAt' ? '#bfdbfe' : '#e2e8f0'}`,
-              '&:hover': {
-                backgroundColor: sortBy === 'updatedAt' ? '#dbeafe' : '#f1f5f9'
-              }
-            }}
-          />
         </Box>
       </Box>
 
@@ -204,8 +181,10 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                     key={emp.id}
                     hover
                     sx={{
-                      '&:hover': { backgroundColor: '#f8fafc' },
-                      transition: 'background-color 0.15s ease'
+                      opacity: emp.status === 'INACTIVE' ? 0.78 : 1,
+                      backgroundColor: emp.status === 'INACTIVE' ? '#fafafa' : 'inherit',
+                      '&:hover': { backgroundColor: emp.status === 'INACTIVE' ? '#f1f5f9' : '#f8fafc' },
+                      transition: 'all 0.15s ease'
                     }}
                   >
                     {/* Employee Profile */}
@@ -218,17 +197,45 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                             borderRadius: '8px',
                             fontSize: '0.8125rem',
                             fontWeight: 700,
-                            backgroundColor: '#f1f5f9',
-                            color: '#334155',
+                            backgroundColor: emp.status === 'INACTIVE' ? '#e2e8f0' : '#f1f5f9',
+                            color: emp.status === 'INACTIVE' ? '#64748b' : '#334155',
                             border: '1px solid #e2e8f0'
                           }}
                         >
                           {initials}
                         </Avatar>
                         <Box>
-                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }} color="text.primary">
-                            {emp.name}
-                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                            <Typography
+                              variant="subtitle2"
+                              sx={{
+                                fontWeight: 600,
+                                color: emp.status === 'INACTIVE' ? '#64748b' : 'text.primary'
+                              }}
+                            >
+                              {emp.name}
+                            </Typography>
+                            {emp.status === 'INACTIVE' && (
+                              <Box
+                                component="span"
+                                sx={{
+                                  px: 0.75,
+                                  py: 0.15,
+                                  borderRadius: '4px',
+                                  fontSize: '0.65rem',
+                                  fontWeight: 700,
+                                  letterSpacing: '0.03em',
+                                  textTransform: 'uppercase',
+                                  backgroundColor: '#fee2e2',
+                                  color: '#dc2626',
+                                  border: '1px solid #fecaca',
+                                  lineHeight: 1.2
+                                }}
+                              >
+                                Inactive
+                              </Box>
+                            )}
+                          </Box>
                           <Typography variant="caption" color="text.secondary">
                             {emp.email}
                           </Typography>
@@ -349,21 +356,24 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                           </IconButton>
                         </Tooltip>
 
-                        <Tooltip title="Deactivate Employee (Mark Inactive)">
-                          <IconButton
-                            size="small"
-                            onClick={() => onDeleteEmployee(emp)}
-                            sx={{
-                              width: 30,
-                              height: 30,
-                              borderRadius: '8px',
-                              backgroundColor: '#fff0ee',
-                              color: '#ea580c',
-                              '&:hover': { backgroundColor: '#fee2e2' }
-                            }}
-                          >
-                            <Icon icon={AppIcon.USER_INACTIVE} width="16" height="16" />
-                          </IconButton>
+                        <Tooltip title={emp.status === 'INACTIVE' ? 'Employee is already inactive' : 'Deactivate Employee (Mark Inactive)'}>
+                          <span>
+                            <IconButton
+                              size="small"
+                              disabled={emp.status === 'INACTIVE'}
+                              onClick={() => onDeleteEmployee(emp)}
+                              sx={{
+                                width: 30,
+                                height: 30,
+                                borderRadius: '8px',
+                                backgroundColor: emp.status === 'INACTIVE' ? '#f1f5f9' : '#fff0ee',
+                                color: emp.status === 'INACTIVE' ? '#94a3b8' : '#ea580c',
+                                '&:hover': { backgroundColor: emp.status === 'INACTIVE' ? '#f1f5f9' : '#fee2e2' }
+                              }}
+                            >
+                              <Icon icon={AppIcon.USER_INACTIVE} width="16" height="16" />
+                            </IconButton>
+                          </span>
                         </Tooltip>
                       </Box>
                     </TableCell>
