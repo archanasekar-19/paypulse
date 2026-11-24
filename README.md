@@ -19,7 +19,7 @@
 | Tier | Deployment Platform | Live URL / Access | Description |
 | :--- | :--- | :--- | :--- |
 | **Frontend SPA** | **Netlify Edge CDN** | [https://paypulse2026.netlify.app](https://paypulse-salary-management.netlify.app) *(or your deployed Netlify domain)* | React 19 + Vite SPA with Route-Level Code Splitting & SPA Rewrites |
-| **Backend REST API** | **Render Web Service** | [https://paypulse-nd4t.onrender.com/api](https://paypulse-nd4t.onrender.com/api) | Node.js + Express + Prisma (bundled via esbuild in native ESM) |
+| **Backend REST API** | **Render Web Service** | [https://paypulse-nd4t.onrender.com](https://paypulse-nd4t.onrender.com/api) | Node.js + Express + Prisma (bundled via esbuild in native ESM) |
 | **API Health Check** | **Render** | [https://paypulse-nd4t.onrender.com/api/health](https://paypulse-nd4t.onrender.com/api/health) | Returns `{"status":"ok"}` confirming live database & API health |
 
 ### 🔑 Demo Credentials
