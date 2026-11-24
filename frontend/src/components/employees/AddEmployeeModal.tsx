@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import type React from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -13,7 +14,8 @@ import {
   MenuItem,
   Typography,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Box
 } from '@mui/material'
 import { Icon } from '@iconify/react'
 import { AppIcon } from '../../constants/icons'
@@ -159,174 +161,218 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
         </Typography>
       </DialogTitle>
 
-      <DialogContent dividers>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2.5 }}>
-            {error}
-          </Alert>
-        )}
+      <Box component="form" autoComplete="off" noValidate onSubmit={(e: React.FormEvent) => { e.preventDefault(); handleSubmit(); }}>
+        <DialogContent dividers>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2.5 }}>
+              {error}
+            </Alert>
+          )}
 
-        {/* 100% Symmetrical 2-Column Grid: Exactly 2 equal-width fields per row */}
-        <Grid container spacing={2.5}>
-          {/* Row 1: First Name & Last Name */}
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              label="First Name"
-              size="small"
-              fullWidth
-              required
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              label="Last Name"
-              size="small"
-              fullWidth
-              required
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-            />
-          </Grid>
-
-          {/* Row 2: Work Email & Employee Code */}
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              label="Work Email"
-              type="email"
-              size="small"
-              fullWidth
-              required
-              placeholder="name@acme.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              label="Employee Code"
-              size="small"
-              fullWidth
-              placeholder="Auto-assigned (e.g. ACM-01528)"
-              value={employeeCode}
-              onChange={(e) => setEmployeeCode(e.target.value)}
-              helperText="Optional; auto-assigned if left blank"
-            />
-          </Grid>
-
-          {/* Row 3: Department & Job Title */}
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <FormControl size="small" fullWidth required>
-              <InputLabel id="add-dept-label">Department</InputLabel>
-              <Select
-                labelId="add-dept-label"
-                value={department}
-                label="Department"
-                onChange={(e) => setDepartment(e.target.value)}
-              >
-                {DEPARTMENTS.map((d) => (
-                  <MenuItem key={d} value={d}>
-                    {d}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              label="Job Title"
-              size="small"
-              fullWidth
-              required
-              placeholder="e.g. Senior Engineer"
-              value={jobTitle}
-              onChange={(e) => setJobTitle(e.target.value)}
-            />
-          </Grid>
-
-          {/* Row 4: Country & Currency */}
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <FormControl size="small" fullWidth required>
-              <InputLabel id="add-country-label">Country</InputLabel>
-              <Select
-                labelId="add-country-label"
-                value={country}
-                label="Country"
-                onChange={(e) => handleCountryChange(e.target.value)}
-              >
-                {COUNTRIES.map((c) => (
-                  <MenuItem key={c} value={c}>
-                    {c}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <FormControl size="small" fullWidth required>
-              <InputLabel id="add-currency-label">Currency</InputLabel>
-              <Select
-                labelId="add-currency-label"
-                value={currency}
-                label="Currency"
-                onChange={(e) => setCurrency(e.target.value)}
-              >
-                {CURRENCIES.map((curr) => (
-                  <MenuItem key={curr} value={curr}>
-                    {curr}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          {/* Row 5: Starting / Base Salary */}
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              label={isEditMode ? 'Annual Base Salary' : 'Starting Base Salary'}
-              type="number"
-              size="small"
-              fullWidth
-              required
-              placeholder="e.g. 125000"
-              value={baseSalary}
-              onChange={(e) => setBaseSalary(e.target.value)}
-            />
-          </Grid>
-        </Grid>
-      </DialogContent>
-
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} color="inherit" disabled={isSubmitting}>
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          color="primary"
-          disabled={isSubmitting}
-          startIcon={
-            isSubmitting ? (
-              <CircularProgress size={16} color="inherit" />
-            ) : (
-              <Icon
-                icon={isEditMode ? AppIcon.CHECK : AppIcon.ADD_USER}
-                width="18"
-                height="18"
+          {/* 100% Symmetrical 2-Column Grid: Exactly 2 equal-width fields per row */}
+          <Grid container spacing={2.5}>
+            {/* Row 1: First Name & Last Name */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="First Name"
+                size="small"
+                fullWidth
+                required
+                name="emp_first_name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                slotProps={{
+                  htmlInput: {
+                    autoComplete: 'off',
+                    'data-lpignore': 'true'
+                  }
+                }}
               />
-            )
-          }
-        >
-          {isSubmitting
-            ? isEditMode
-              ? 'Saving Changes...'
-              : 'Onboarding Employee...'
-            : isEditMode
-            ? 'Save Changes'
-            : 'Add Employee'}
-        </Button>
-      </DialogActions>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Last Name"
+                size="small"
+                fullWidth
+                required
+                name="emp_last_name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                slotProps={{
+                  htmlInput: {
+                    autoComplete: 'off',
+                    'data-lpignore': 'true'
+                  }
+                }}
+              />
+            </Grid>
+
+            {/* Row 2: Work Email & Employee Code */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Work Email"
+                type="email"
+                size="small"
+                fullWidth
+                required
+                placeholder="name@acme.com"
+                name="emp_work_email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                slotProps={{
+                  htmlInput: {
+                    autoComplete: 'off',
+                    'data-lpignore': 'true'
+                  }
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Employee Code"
+                size="small"
+                fullWidth
+                placeholder="Auto-assigned (e.g. ACM-01528)"
+                name="emp_code"
+                value={employeeCode}
+                onChange={(e) => setEmployeeCode(e.target.value)}
+                helperText="Optional; auto-assigned if left blank"
+                slotProps={{
+                  htmlInput: {
+                    autoComplete: 'off',
+                    'data-lpignore': 'true'
+                  }
+                }}
+              />
+            </Grid>
+
+            {/* Row 3: Department & Job Title */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl size="small" fullWidth required>
+                <InputLabel id="add-dept-label">Department</InputLabel>
+                <Select
+                  labelId="add-dept-label"
+                  value={department}
+                  label="Department"
+                  onChange={(e) => setDepartment(e.target.value)}
+                >
+                  {DEPARTMENTS.map((d) => (
+                    <MenuItem key={d} value={d}>
+                      {d}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Job Title"
+                size="small"
+                fullWidth
+                required
+                placeholder="e.g. Senior Engineer"
+                name="emp_job_title"
+                value={jobTitle}
+                onChange={(e) => setJobTitle(e.target.value)}
+                slotProps={{
+                  htmlInput: {
+                    autoComplete: 'off',
+                    'data-lpignore': 'true'
+                  }
+                }}
+              />
+            </Grid>
+
+            {/* Row 4: Country & Currency */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl size="small" fullWidth required>
+                <InputLabel id="add-country-label">Country</InputLabel>
+                <Select
+                  labelId="add-country-label"
+                  value={country}
+                  label="Country"
+                  onChange={(e) => handleCountryChange(e.target.value)}
+                >
+                  {COUNTRIES.map((c) => (
+                    <MenuItem key={c} value={c}>
+                      {c}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl size="small" fullWidth required>
+                <InputLabel id="add-currency-label">Currency</InputLabel>
+                <Select
+                  labelId="add-currency-label"
+                  value={currency}
+                  label="Currency"
+                  onChange={(e) => setCurrency(e.target.value)}
+                >
+                  {CURRENCIES.map((curr) => (
+                    <MenuItem key={curr} value={curr}>
+                      {curr}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Row 5: Starting / Base Salary */}
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                label={isEditMode ? 'Annual Base Salary' : 'Starting Base Salary'}
+                type="number"
+                size="small"
+                fullWidth
+                required
+                placeholder="e.g. 125000"
+                name="emp_base_salary"
+                value={baseSalary}
+                onChange={(e) => setBaseSalary(e.target.value)}
+                slotProps={{
+                  htmlInput: {
+                    autoComplete: 'off',
+                    'data-lpignore': 'true'
+                  }
+                }}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button onClick={onClose} color="inherit" disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={isSubmitting}
+            startIcon={
+              isSubmitting ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <Icon
+                  icon={isEditMode ? AppIcon.CHECK : AppIcon.ADD_USER}
+                  width="18"
+                  height="18"
+                />
+              )
+            }
+          >
+            {isSubmitting
+              ? isEditMode
+                ? 'Saving Changes...'
+                : 'Onboarding Employee...'
+              : isEditMode
+              ? 'Save Changes'
+              : 'Add Employee'}
+          </Button>
+        </DialogActions>
+      </Box>
     </Dialog>
   )
 }

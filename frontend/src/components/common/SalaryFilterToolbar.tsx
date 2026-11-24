@@ -137,13 +137,14 @@ export const SalaryFilterToolbar: React.FC<SalaryFilterToolbarProps> = ({
       >
         {/* Left Filter Controls: Search Box + Country Dropdown + Action Buttons */}
         <Box sx={{ display: 'flex', gap: 1.25, flexWrap: 'wrap', flex: 1, alignItems: 'center' }}>
-          {/* 1. Search Box */}
+          {/* 1. Search Box with Autofill Protection */}
           <TextField
             size="small"
             placeholder="Search by code (e.g. ACM-01527), name, title, or email..."
             value={searchInput}
             onChange={(e) => onSearchInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
+            autoComplete="off"
             sx={{
               minWidth: { xs: '100%', sm: 270 },
               flex: { sm: 1 },
@@ -168,6 +169,14 @@ export const SalaryFilterToolbar: React.FC<SalaryFilterToolbarProps> = ({
                     </IconButton>
                   </InputAdornment>
                 ) : null
+              },
+              htmlInput: {
+                autoComplete: 'off',
+                name: 'paypulse-roster-search-field',
+                id: 'paypulse-roster-search-field',
+                'data-lpignore': 'true',
+                'data-form-type': 'other',
+                spellCheck: false
               }
             }}
           />
